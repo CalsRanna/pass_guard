@@ -29,10 +29,10 @@ class PasswordDetail extends StatelessWidget {
         ],
       ),
       body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
           Card(
-            margin: const EdgeInsets.all(0),
-            shape: const BeveledRectangleBorder(),
+            margin: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
@@ -53,8 +53,7 @@ class PasswordDetail extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
-            margin: const EdgeInsets.all(0),
-            shape: const BeveledRectangleBorder(),
+            margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -105,8 +104,7 @@ class PasswordDetail extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
                   Card(
-                    margin: const EdgeInsets.all(0),
-                    shape: const BeveledRectangleBorder(),
+                    margin: EdgeInsets.zero,
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
                       width: double.infinity,

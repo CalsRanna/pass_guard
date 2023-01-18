@@ -93,10 +93,10 @@ class _PasswordFormState extends State<PasswordForm> {
       body: Form(
         key: formKey,
         child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             Card(
-              margin: const EdgeInsets.all(0),
-              shape: const BeveledRectangleBorder(),
+              margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -121,8 +121,7 @@ class _PasswordFormState extends State<PasswordForm> {
             ),
             const SizedBox(height: 16),
             Card(
-              margin: const EdgeInsets.all(0),
-              shape: const BeveledRectangleBorder(),
+              margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -190,8 +189,7 @@ class _PasswordFormState extends State<PasswordForm> {
             // ),
             const SizedBox(height: 16),
             Card(
-              margin: const EdgeInsets.all(0),
-              shape: const BeveledRectangleBorder(),
+              margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
