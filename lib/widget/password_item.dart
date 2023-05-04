@@ -91,7 +91,7 @@ class _PasswordTileState extends State<PasswordTile> {
           ),
         ),
       );
-      Overlay.of(context)?.insert(overlayEntry);
+      Overlay.of(context).insert(overlayEntry);
       setState(() {
         color = Colors.grey.withOpacity(0.25);
         entry = overlayEntry;

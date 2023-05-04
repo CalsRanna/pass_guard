@@ -81,13 +81,14 @@ class Setting extends StatelessWidget {
   }
 
   void handleInput(BuildContext context, String label, String value) async {
+    final ref = context.ref;
     final newPassword = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => SettingInput(label: label, value: value),
       ),
     );
     if (newPassword != null) {
-      context.ref.set(mainPasswordCreator, newPassword);
+      ref.set(mainPasswordCreator, newPassword);
       Hive.box('setting').put('main_password', newPassword);
     }
   }

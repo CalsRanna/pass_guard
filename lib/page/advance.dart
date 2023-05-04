@@ -43,14 +43,15 @@ class Advance extends StatelessWidget {
     );
   }
 
-  void showLicense(BuildContext context) async {
-    final info = await PackageInfo.fromPlatform();
-    showLicensePage(
-      applicationIcon: const Icon(Icons.lock_outline, size: 64),
-      applicationLegalese: 'Guard your password only in your own way.',
-      applicationName: info.appName,
-      applicationVersion: info.version,
-      context: context,
+  void showLicense(BuildContext context) {
+    PackageInfo.fromPlatform().then(
+      (info) => showLicensePage(
+        applicationIcon: const Icon(Icons.lock_outline, size: 64),
+        applicationLegalese: 'Guard your password only in your own way.',
+        applicationName: info.appName,
+        applicationVersion: info.version,
+        context: context,
+      ),
     );
   }
 
@@ -80,12 +81,13 @@ class Advance extends StatelessWidget {
   }
 
   void confirmErase(BuildContext context) async {
+    final ref = context.ref;
     final router = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final color = Theme.of(context).colorScheme.primary;
     final database = context.ref.read(databaseEmitter.asyncData).data;
     await database?.passwordDao.deleteAllPasswords();
-    context.ref.emit(allPasswordsEmitter, <Password>[]);
+    ref.emit(allPasswordsEmitter, <Password>[]);
     Hive.box('setting').put('local_version', 0);
     messenger.showSnackBar(
       SnackBar(

@@ -1,7 +1,6 @@
 import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:password_generator/component/add_tag.dart';
 import 'package:password_generator/entity/password.dart';
 import 'package:password_generator/state/global.dart';
 import 'package:password_generator/state/password.dart';
@@ -223,6 +222,7 @@ class _PasswordFormState extends State<PasswordForm> {
   }
 
   void handleConfirm(BuildContext context) async {
+    final ref = context.ref;
     if (formKey.currentState!.validate()) {
       var password = Password(
         comment: commentController.text,
@@ -237,14 +237,14 @@ class _PasswordFormState extends State<PasswordForm> {
       } else {
         final newPassword = password.copyWith(id: widget.id);
         await database.passwordDao.updatePassword(newPassword);
-        context.ref.emit(passwordEmiiter(widget.id!), newPassword);
+        ref.emit(passwordEmiiter(widget.id!), newPassword);
       }
       Hive.box('setting').put(
         'local_version',
         DateTime.now().millisecondsSinceEpoch,
       );
       final passwords = await database.passwordDao.getAllPasswords();
-      context.ref.emit(allPasswordsEmitter, passwords);
+      ref.emit(allPasswordsEmitter, passwords);
       router.pop();
     }
   }
@@ -296,6 +296,7 @@ class _PasswordFormState extends State<PasswordForm> {
   }
 
   void confirmDelete(BuildContext context) async {
+    final ref = context.ref;
     final router = Navigator.of(context);
     final password = Password(
       id: widget.id,
@@ -310,7 +311,7 @@ class _PasswordFormState extends State<PasswordForm> {
       DateTime.now().millisecondsSinceEpoch,
     );
     final passwords = await database.passwordDao.getAllPasswords();
-    context.ref.emit(allPasswordsEmitter, passwords);
+    ref.emit(allPasswordsEmitter, passwords);
     router.popUntil(ModalRoute.withName('/'));
   }
 }

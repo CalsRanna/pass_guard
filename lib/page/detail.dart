@@ -1,6 +1,5 @@
 import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
-import 'package:password_generator/component/add_tag.dart';
 import 'package:password_generator/page/form.dart';
 import 'package:password_generator/state/password.dart';
 import 'package:password_generator/widget/password_item.dart';

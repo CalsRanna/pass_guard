@@ -113,6 +113,7 @@ class _PasswordListState extends State<PasswordList> {
   }
 
   void filterList(String? text) async {
+    final ref = context.ref;
     final database = context.ref.watch(databaseEmitter.asyncData).data;
     List<Password>? passwords;
     if (text == null || text.isEmpty) {
@@ -120,7 +121,7 @@ class _PasswordListState extends State<PasswordList> {
     } else {
       passwords = await database?.passwordDao.getPasswordsLikeName('%$text%');
     }
-    context.ref.emit(allPasswordsEmitter, passwords);
+    ref.emit(allPasswordsEmitter, passwords);
   }
 
   void triggerTextField() {

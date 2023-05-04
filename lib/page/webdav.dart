@@ -145,6 +145,7 @@ class _WebDAVState extends State<WebDAV> {
   }
 
   void handleInput(BuildContext context, String label, String value) async {
+    final ref = context.ref;
     final newValue = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => SettingInput(label: label, value: value),
@@ -153,19 +154,19 @@ class _WebDAVState extends State<WebDAV> {
     if (newValue != null) {
       switch (label) {
         case '服务器地址':
-          context.ref.set(hostCreator, newValue);
+          ref.set(hostCreator, newValue);
           Hive.box('setting').put('host', newValue);
           break;
         case '路径':
-          context.ref.set(pathCreator, newValue);
+          ref.set(pathCreator, newValue);
           Hive.box('setting').put('path', newValue);
           break;
         case '用户名':
-          context.ref.set(usernameCreator, newValue);
+          ref.set(usernameCreator, newValue);
           Hive.box('setting').put('username', newValue);
           break;
         case '密码':
-          context.ref.set(passwordCreator, newValue);
+          ref.set(passwordCreator, newValue);
           Hive.box('setting').put('password', newValue);
           break;
         default:
