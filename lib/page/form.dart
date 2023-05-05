@@ -23,6 +23,7 @@ class _PasswordFormState extends State<PasswordForm> {
   late TextEditingController commentController;
   String name = '';
   late TextEditingController nameController;
+  bool obscureText = true;
   String password = '';
   late TextEditingController passwordController;
   bool showGenerator = false;
@@ -71,11 +72,6 @@ class _PasswordFormState extends State<PasswordForm> {
 
   @override
   Widget build(BuildContext context) {
-    final labelStyle = TextStyle(
-      color: Theme.of(context).colorScheme.primary,
-      fontSize: 18,
-      fontWeight: FontWeight.w900,
-    );
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -99,13 +95,20 @@ class _PasswordFormState extends State<PasswordForm> {
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextIcon(text: name),
-                    const SizedBox(width: 16),
+                    TextIcon(size: const Size.square(48), text: name),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: TextFormField(
                         controller: nameController,
-                        decoration: const InputDecoration(hintText: '名称'),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          fillColor:
+                              Theme.of(context).colorScheme.tertiaryContainer,
+                          filled: true,
+                          hintText: '名称',
+                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return '名称不能为空';
@@ -123,12 +126,18 @@ class _PasswordFormState extends State<PasswordForm> {
               margin: EdgeInsets.zero,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Wrap(
+                  runSpacing: 8,
                   children: [
                     TextFormField(
                       controller: usernameController,
-                      decoration: const InputDecoration(labelText: '用户名称'),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        fillColor:
+                            Theme.of(context).colorScheme.tertiaryContainer,
+                        filled: true,
+                        hintText: '用户名称',
+                      ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return '用户名称不能为空';
@@ -136,26 +145,39 @@ class _PasswordFormState extends State<PasswordForm> {
                         return null;
                       },
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: passwordController,
-                            decoration: const InputDecoration(labelText: '密码'),
-                            obscureText: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return '密码不能为空';
-                              }
-                              return null;
-                            },
-                          ),
+                    TextFormField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        fillColor:
+                            Theme.of(context).colorScheme.tertiaryContainer,
+                        filled: true,
+                        hintText: '密码',
+                        suffixIcon: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: switchObscureText,
+                              child: Icon(
+                                obscureText
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined),
+                              onPressed: toggleGenerator,
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined),
-                          onPressed: toggleGenerator,
-                        )
-                      ],
+                      ),
+                      obscureText: obscureText,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '密码不能为空';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     _PasswordGenerator(
@@ -167,25 +189,6 @@ class _PasswordFormState extends State<PasswordForm> {
                 ),
               ),
             ),
-            // const SizedBox(height: 16),
-            // Card(
-            //   margin: const EdgeInsets.all(0),
-            //   shape: const BeveledRectangleBorder(),
-            //   child: Padding(
-            //     padding: const EdgeInsets.all(16.0),
-            //     child: Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         Text('标签', style: labelStyle),
-            //         Watcher((context, ref, _) {
-            //           return Wrap(
-            //             children: const [AdditionTag()],
-            //           );
-            //         }),
-            //       ],
-            //     ),
-            //   ),
-            // ),
             const SizedBox(height: 16),
             Card(
               margin: EdgeInsets.zero,
@@ -196,7 +199,13 @@ class _PasswordFormState extends State<PasswordForm> {
                   children: [
                     TextFormField(
                       controller: commentController,
-                      decoration: const InputDecoration(labelText: '备注'),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        fillColor:
+                            Theme.of(context).colorScheme.tertiaryContainer,
+                        filled: true,
+                        hintText: '备注',
+                      ),
                     ),
                   ],
                 ),
@@ -219,6 +228,12 @@ class _PasswordFormState extends State<PasswordForm> {
         ),
       ),
     );
+  }
+
+  void switchObscureText() {
+    setState(() {
+      obscureText = !obscureText;
+    });
   }
 
   void handleConfirm(BuildContext context) async {
@@ -272,23 +287,23 @@ class _PasswordFormState extends State<PasswordForm> {
 
   void handleDelete(BuildContext context) async {
     showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text('你确定要删除“$name”吗?'),
-              content: const Text('此项目将被立即移除，并且无法再次找回。'),
-              actions: [
-                TextButton(
-                    onPressed: () => cancelDelete(context),
-                    child: const Text('取消')),
-                TextButton(
-                  onPressed: () => confirmDelete(context),
-                  child: const Text(
-                    '删除',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
-            ));
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('你确定要删除“$name”吗?'),
+        content: const Text('此项目将被立即移除，并且无法再次找回。'),
+        actions: [
+          TextButton(
+              onPressed: () => cancelDelete(context), child: const Text('取消')),
+          TextButton(
+            onPressed: () => confirmDelete(context),
+            child: const Text(
+              '删除',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void cancelDelete(BuildContext context) {
@@ -339,22 +354,16 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = TextButton(
-      onPressed: toggleShowPassword,
-      child: SizedBox(
-        width: double.infinity,
-        child: Text(showPassword ? widget.password : '显示密码'),
-      ),
-    );
+    Widget child = const SizedBox();
     if (widget.showGenerator) {
       child = Column(
         children: [
           Container(
             decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Theme.of(context).colorScheme.tertiary),
+              borderRadius: BorderRadius.circular(4),
             ),
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.only(left: 8),
             child: Row(
               children: [
                 Expanded(child: Text(widget.password)),
@@ -371,10 +380,12 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
               SizedBox(width: 96, child: Text('${length.toInt()}位密码')),
               Expanded(
                 child: Slider.adaptive(
+                  divisions: 52,
                   min: 8,
                   max: 64,
                   value: length,
                   onChanged: handleSliderChanged,
+                  onChangeEnd: handleSliderChangeEnd,
                 ),
               ),
             ],
@@ -424,14 +435,17 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
   }
 
   void handleSliderChanged(double value) {
+    setState(() {
+      length = value;
+    });
+  }
+
+  void handleSliderChangeEnd(double value) {
     final password = PasswordGenerator(
       hasNumber: hasNumber,
       hasSpecialCharacter: hasSpecialCharacter,
       length: value.toInt(),
     ).generate();
-    setState(() {
-      length = value;
-    });
     widget.onGenerated?.call(password);
   }
 

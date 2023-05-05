@@ -53,7 +53,10 @@ class _PasswordListState extends State<PasswordList> {
     Widget? title;
     if (showTextField) {
       actions = [
-        TextButton(onPressed: triggerTextField, child: const Text('取消'))
+        IconButton(
+          onPressed: triggerTextField,
+          icon: const Icon(Icons.close),
+        )
       ];
       title = TextField(
         controller: controller,
@@ -104,7 +107,6 @@ class _PasswordListState extends State<PasswordList> {
       body: body,
       floatingActionButton: !showTextField
           ? FloatingActionButton(
-              shape: const CircleBorder(),
               onPressed: () => handleNavigated(context, 'create'),
               child: const Icon(Icons.add_outlined),
             )

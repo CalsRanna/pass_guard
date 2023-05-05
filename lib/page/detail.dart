@@ -34,19 +34,21 @@ class PasswordDetail extends StatelessWidget {
             margin: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Watcher((context, ref, _) => TextIcon(
-                      text:
-                          ref.watch(passwordEmiiter(id).asyncData).data?.name ??
-                              '')),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Watcher((context, ref, _) => Text(
-                        ref.watch(passwordEmiiter(id).asyncData).data?.name ??
-                            '')),
-                  )
-                ],
+              child: Watcher(
+                (context, ref, _) {
+                  final name =
+                      ref.watch(passwordEmiiter(id).asyncData).data?.name;
+                  return Row(
+                    children: [
+                      TextIcon(
+                        size: const Size.square(48),
+                        text: name ?? '',
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(child: Text(name ?? '')),
+                    ],
+                  );
+                },
               ),
             ),
           ),

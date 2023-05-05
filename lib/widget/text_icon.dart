@@ -11,9 +11,9 @@ class TextIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color:
-            RandomColor.fromText(text) ?? Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(4),
+        color: RandomColor.fromText(text) ??
+            Theme.of(context).colorScheme.primaryContainer,
+        shape: BoxShape.circle,
       ),
       height: size?.height ?? 64,
       width: size?.width ?? 64,
