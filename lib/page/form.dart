@@ -52,7 +52,7 @@ class _PasswordFormState extends State<PasswordForm> {
   void didChangeDependencies() {
     if (widget.id != null) {
       final password =
-          context.ref.watch(passwordEmiiter(widget.id!).asyncData).data;
+          context.ref.watch(passwordEmitter(widget.id!).asyncData).data;
       commentController.text = password?.comment ?? '';
       nameController.text = password?.name ?? '';
       usernameController.text = password?.username ?? '';
@@ -252,7 +252,7 @@ class _PasswordFormState extends State<PasswordForm> {
       } else {
         final newPassword = password.copyWith(id: widget.id);
         await database.passwordDao.updatePassword(newPassword);
-        ref.emit(passwordEmiiter(widget.id!), newPassword);
+        ref.emit(passwordEmitter(widget.id!), newPassword);
       }
       Hive.box('setting').put(
         'local_version',

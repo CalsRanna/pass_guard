@@ -280,8 +280,8 @@ class _WebDAVState extends State<WebDAV> {
         syncing = false;
       });
       String message;
-      if (e.runtimeType == DioError) {
-        message = (e as DioError).message;
+      if (e.runtimeType == DioException) {
+        message = (e as DioException).message ?? '未知错误';
       } else {
         message = e.toString();
       }

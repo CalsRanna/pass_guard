@@ -10,11 +10,13 @@ final allPasswordsEmitter = Emitter<List<Password>>((ref, emit) async {
   emit(passwords);
 }, name: 'allPasswordsEmitter');
 
-final passwordEmiiter = Emitter.arg1<Password?, int>((ref, id, emit) async {
-  final database = await ref.read(databaseEmitter);
-  final password = await database.passwordDao.findPasswordById(id);
-  emit(password);
-}, name: (id) => 'passwordEmitter_$id');
+Emitter<Password?> passwordEmitter(int id) {
+  return Emitter((ref, emit) async {
+    final database = await ref.read(databaseEmitter);
+    final password = await database.passwordDao.findPasswordById(id);
+    emit(password);
+  }, args: ['password', id], name: 'passwordEmitter_$id');
+}
 
 final localVersionCreator = Creator<int>(
   (ref) => Hive.box('setting').get('local_version', defaultValue: 0),

@@ -37,7 +37,7 @@ class PasswordDetail extends StatelessWidget {
               child: Watcher(
                 (context, ref, _) {
                   final name =
-                      ref.watch(passwordEmiiter(id).asyncData).data?.name;
+                      ref.watch(passwordEmitter(id).asyncData).data?.name;
                   return Row(
                     children: [
                       TextIcon(
@@ -60,7 +60,7 @@ class PasswordDetail extends StatelessWidget {
               children: [
                 Watcher((context, ref, _) {
                   final password =
-                      ref.watch(passwordEmiiter(id).asyncData).data;
+                      ref.watch(passwordEmitter(id).asyncData).data;
                   return PasswordTile(
                     label: '用户名称',
                     text: password?.username ?? '',
@@ -68,7 +68,7 @@ class PasswordDetail extends StatelessWidget {
                 }),
                 Watcher((context, ref, _) {
                   final password =
-                      ref.watch(passwordEmiiter(id).asyncData).data;
+                      ref.watch(passwordEmitter(id).asyncData).data;
                   return PasswordTile(
                     label: '密码',
                     obscureText: true,
@@ -98,7 +98,7 @@ class PasswordDetail extends StatelessWidget {
           //   ),
           // ),
           Watcher((context, ref, _) {
-            final password = ref.watch(passwordEmiiter(id).asyncData).data;
+            final password = ref.watch(passwordEmitter(id).asyncData).data;
             if (password?.comment != null && password!.comment!.isNotEmpty) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

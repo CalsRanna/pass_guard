@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:webdav_client/webdav_client.dart';
 import 'package:path/path.dart' as p;
 
@@ -20,13 +20,11 @@ class WebDAVUtil {
     required this.username,
   }) {
     final dio = WdDio();
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      client.badCertificateCallback = (cert, host, port) {
+    dio.httpClientAdapter = IOHttpClientAdapter(
+      validateCertificate: (certificate, host, port) {
         return true;
-      };
-      return client;
-    };
+      },
+    );
     _client = Client(
       uri: url,
       c: dio,
@@ -39,8 +37,8 @@ class WebDAVUtil {
     try {
       await _client.readDir(_path);
     } catch (e) {
-      if (e.runtimeType == DioError) {
-        final message = (e as DioError).message;
+      if (e.runtimeType == DioException) {
+        final message = (e as DioException).message;
         if (message == 'Not Found') {
           await _client.mkdirAll(_path);
         }
