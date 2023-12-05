@@ -24,6 +24,8 @@ class Setting extends StatelessWidget {
           children: [
             const SettingLabel(label: '加密'),
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: Column(
                 children: [
@@ -44,6 +46,8 @@ class Setting extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: ListTile(
                 title: const Text('WebDAV'),
@@ -53,6 +57,8 @@ class Setting extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: ListTile(
                 title: const Text('高级'),

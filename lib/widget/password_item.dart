@@ -160,23 +160,22 @@ class _ToolBar extends StatelessWidget {
     return Material(
       child: Container(
         alignment: Alignment.center,
-        child: PhysicalModel(
-          borderRadius: BorderRadius.circular(8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
           color: Colors.white,
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(0),
-            child: Row(
-              children: [
-                TextButton(onPressed: onCopied, child: const Text('拷贝')),
-                if (obscureText)
-                  TextButton(
-                    onPressed: onToggled,
-                    child: Text(obscured ? '隐藏' : '显示'),
-                  ),
-                TextButton(onPressed: onZoomed, child: const Text('放大显示')),
-              ],
-            ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(0),
+          child: Row(
+            children: [
+              TextButton(onPressed: onCopied, child: const Text('拷贝')),
+              if (obscureText)
+                TextButton(
+                  onPressed: onToggled,
+                  child: Text(obscured ? '隐藏' : '显示'),
+                ),
+              TextButton(onPressed: onZoomed, child: const Text('放大显示')),
+            ],
           ),
         ),
       ),

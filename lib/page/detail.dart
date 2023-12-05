@@ -26,11 +26,14 @@ class PasswordDetail extends StatelessWidget {
             child: const Text('编辑'),
           )
         ],
+        title: const Text('密码详情'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Card(
+            elevation: 0,
+            color: Theme.of(context).colorScheme.surfaceVariant,
             margin: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -54,6 +57,8 @@ class PasswordDetail extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
+            elevation: 0,
+            color: Theme.of(context).colorScheme.surfaceVariant,
             margin: EdgeInsets.zero,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,6 +110,8 @@ class PasswordDetail extends StatelessWidget {
                 children: [
                   const SizedBox(height: 16),
                   Card(
+                    elevation: 0,
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     margin: EdgeInsets.zero,
                     child: Container(
                       padding: const EdgeInsets.all(16.0),

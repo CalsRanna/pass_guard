@@ -5,7 +5,9 @@ import 'package:password_generator/entity/password.dart';
 import 'package:password_generator/state/global.dart';
 import 'package:password_generator/state/password.dart';
 import 'package:password_generator/util/password_generator.dart';
-import 'package:password_generator/widget/text_icon.dart';
+import 'package:password_generator/widget/form_group.dart';
+import 'package:password_generator/widget/form_item.dart';
+import 'package:password_generator/widget/input.dart';
 
 class PasswordForm extends StatefulWidget {
   const PasswordForm({super.key, this.id});
@@ -19,7 +21,6 @@ class PasswordForm extends StatefulWidget {
 }
 
 class _PasswordFormState extends State<PasswordForm> {
-  final formKey = GlobalKey<FormState>();
   late TextEditingController commentController;
   String name = '';
   late TextEditingController nameController;
@@ -51,12 +52,13 @@ class _PasswordFormState extends State<PasswordForm> {
   @override
   void didChangeDependencies() {
     if (widget.id != null) {
-      final password =
+      final item =
           context.ref.watch(passwordEmitter(widget.id!).asyncData).data;
-      commentController.text = password?.comment ?? '';
-      nameController.text = password?.name ?? '';
-      usernameController.text = password?.username ?? '';
-      passwordController.text = password?.password ?? '';
+      commentController.text = item?.comment ?? '';
+      nameController.text = item?.name ?? '';
+      usernameController.text = item?.username ?? '';
+      passwordController.text = item?.password ?? '';
+      password = item?.password ?? '';
     }
     super.didChangeDependencies();
   }
@@ -72,160 +74,146 @@ class _PasswordFormState extends State<PasswordForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surfaceVariant = colorScheme.surfaceVariant;
+    final primary = colorScheme.primary;
     return Scaffold(
       appBar: AppBar(
         actions: [
           TextButton(
-            onPressed: () => handleConfirm(context),
-            child: const Text('完成'),
+            onPressed: handleConfirm,
+            child: const Text('存储'),
           )
         ],
         leading: TextButton(
-          onPressed: () => handlePop(context),
+          onPressed: handlePop,
           child: const Text('取消'),
         ),
+        title: Text(widget.id == null ? '添加' : '修改'),
       ),
-      body: Form(
-        key: formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextIcon(size: const Size.square(48), text: name),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        controller: nameController,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          fillColor:
-                              Theme.of(context).colorScheme.tertiaryContainer,
-                          filled: true,
-                          hintText: '名称',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return '名称不能为空';
-                          }
-                          return null;
-                        },
-                      ),
-                    )
-                  ],
-                ),
+      body: ListView(
+        children: [
+          FormGroup(
+            child: FormItem(
+              label: '标题',
+              child: Input(
+                initValue: name,
+                placeholder: '添加标题',
+                onChanged: (value) {
+                  setState(() {
+                    name = value;
+                  });
+                },
               ),
             ),
-            const SizedBox(height: 16),
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Wrap(
-                  runSpacing: 8,
-                  children: [
-                    TextFormField(
-                      controller: usernameController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        fillColor:
-                            Theme.of(context).colorScheme.tertiaryContainer,
-                        filled: true,
-                        hintText: '用户名称',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '用户名称不能为空';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: passwordController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        fillColor:
-                            Theme.of(context).colorScheme.tertiaryContainer,
-                        filled: true,
-                        hintText: '密码',
-                        suffixIcon: Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: switchObscureText,
-                              child: Icon(
-                                obscureText
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.settings_outlined),
-                              onPressed: toggleGenerator,
-                            ),
-                          ],
+          ),
+          FormGroup(
+            child: Column(
+              children: [
+                FormItem(
+                  label: '用户名',
+                  child: Input(controller: usernameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                FormItem(
+                  label: '电子邮箱',
+                  child: Input(controller: usernameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                FormItem(
+                  label: '密码',
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Input(
+                          controller: passwordController,
+                          placeholder: '密码',
+                          type:
+                              obscureText ? InputType.password : InputType.text,
                         ),
                       ),
-                      obscureText: obscureText,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '密码不能为空';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _PasswordGenerator(
-                      password: password,
-                      showGenerator: showGenerator,
-                      onGenerated: handleGenerated,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: commentController,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        fillColor:
-                            Theme.of(context).colorScheme.tertiaryContainer,
-                        filled: true,
-                        hintText: '备注',
+                      GestureDetector(
+                        onTap: switchObscureText,
+                        child: Icon(
+                          obscureText
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: primary,
+                          size: 16,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (widget.id != null)
-              TextButton(
-                onPressed: () => handleDelete(context),
-                child: const Text(
-                  '删除',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: toggleGenerator,
+                        child: Icon(
+                          Icons.settings_outlined,
+                          color: primary,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                    ],
                   ),
                 ),
-              )
-          ],
-        ),
+                _PasswordGenerator(
+                  password: password,
+                  showGenerator: showGenerator,
+                  onGenerated: handleGenerated,
+                ),
+                FormItem(
+                  label: '网站',
+                  child: Input(
+                    controller: usernameController,
+                  ),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                const _InsertField(label: '添加字段'),
+              ],
+            ),
+          ),
+          FormGroup(
+            title: '其他详细信息',
+            child: Column(
+              children: [
+                FormItem(
+                  label: '电话号码',
+                  child: Input(controller: nameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                FormItem(
+                  label: '一次性代码',
+                  child: Input(controller: nameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                FormItem(
+                  label: '密码保护的提问',
+                  child: Input(controller: nameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                FormItem(
+                  label: '密码保护的答案',
+                  child: Input(controller: nameController),
+                ),
+                Divider(height: 1, color: surfaceVariant),
+                const _InsertField(label: '添加字段'),
+              ],
+            ),
+          ),
+          const FormGroup(
+            title: '附件',
+            child: _InsertField(label: '添加文件'),
+          ),
+          FormGroup(
+            child: FormItem(
+              label: '备注',
+              child: Input(controller: commentController, placeholder: '备注'),
+            ),
+          ),
+          const FormGroup(
+            child: _InsertField(label: '添加小节'),
+          ),
+        ],
       ),
     );
   }
@@ -236,35 +224,34 @@ class _PasswordFormState extends State<PasswordForm> {
     });
   }
 
-  void handleConfirm(BuildContext context) async {
+  void handleConfirm() async {
     final ref = context.ref;
-    if (formKey.currentState!.validate()) {
-      var password = Password(
-        comment: commentController.text,
-        name: nameController.text,
-        username: usernameController.text,
-        password: passwordController.text,
-      );
-      final router = Navigator.of(context);
-      final database = await context.ref.read(databaseEmitter);
-      if (widget.id == null) {
-        await database.passwordDao.insertPassword(password);
-      } else {
-        final newPassword = password.copyWith(id: widget.id);
-        await database.passwordDao.updatePassword(newPassword);
-        ref.emit(passwordEmitter(widget.id!), newPassword);
-      }
-      Hive.box('setting').put(
-        'local_version',
-        DateTime.now().millisecondsSinceEpoch,
-      );
-      final passwords = await database.passwordDao.getAllPasswords();
-      ref.emit(allPasswordsEmitter, passwords);
-      router.pop();
+    var record = Password(
+      comment: commentController.text,
+      name: name,
+      username: usernameController.text,
+      password: password,
+    );
+    print(name);
+    final router = Navigator.of(context);
+    final database = await context.ref.read(databaseEmitter);
+    if (widget.id == null) {
+      await database.passwordDao.insertPassword(record);
+    } else {
+      final newPassword = record.copyWith(id: widget.id);
+      await database.passwordDao.updatePassword(newPassword);
+      ref.emit(passwordEmitter(widget.id!), newPassword);
     }
+    Hive.box('setting').put(
+      'local_version',
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    final passwords = await database.passwordDao.getAllPasswords();
+    ref.emit(allPasswordsEmitter, passwords);
+    router.pop();
   }
 
-  void handlePop(BuildContext context) {
+  void handlePop() {
     Navigator.of(context).pop();
   }
 
@@ -290,7 +277,7 @@ class _PasswordFormState extends State<PasswordForm> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('你确定要删除“$name”吗?'),
-        content: const Text('此项目将被立即移除，并且无法再次找回。'),
+        content: const Text('此密码将被立即移除，并且无法再次找回。'),
         actions: [
           TextButton(
               onPressed: () => cancelDelete(context), child: const Text('取消')),
@@ -356,65 +343,74 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
   Widget build(BuildContext context) {
     Widget child = const SizedBox();
     if (widget.showGenerator) {
-      child = Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.tertiary),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.only(left: 8),
-            child: Row(
-              children: [
-                Expanded(child: Text(widget.password)),
-                IconButton(
-                  icon: const Icon(Icons.refresh_outlined),
-                  onPressed: handleButtonPressed,
-                )
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
+      child = Card(
+        color: Theme.of(context).colorScheme.surfaceVariant,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
-              SizedBox(width: 96, child: Text('${length.toInt()}位密码')),
-              Expanded(
-                child: Slider.adaptive(
-                  divisions: 52,
-                  min: 8,
-                  max: 64,
-                  value: length,
-                  onChanged: handleSliderChanged,
-                  onChangeEnd: handleSliderChangeEnd,
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  borderRadius: BorderRadius.circular(4),
                 ),
+                padding: const EdgeInsets.only(left: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(widget.password)),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_outlined),
+                      onPressed: handleButtonPressed,
+                    )
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  SizedBox(width: 96, child: Text('${length.toInt()}位密码')),
+                  Expanded(
+                    child: Slider.adaptive(
+                      divisions: 52,
+                      min: 8,
+                      max: 64,
+                      value: length,
+                      onChanged: handleSliderChanged,
+                      onChangeEnd: handleSliderChangeEnd,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  const Text('特殊符号'),
+                  const Expanded(child: SizedBox()),
+                  Switch.adaptive(
+                    value: hasSpecialCharacter,
+                    onChanged: handleSpecialCharacterSwitchChanged,
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  const Text('数字'),
+                  const Expanded(child: SizedBox()),
+                  Switch.adaptive(
+                    value: hasNumber,
+                    onChanged: handleNumberSwitchChanged,
+                  )
+                ],
               ),
             ],
           ),
-          Row(
-            children: [
-              const Text('特殊符号'),
-              const Expanded(child: SizedBox()),
-              Switch.adaptive(
-                value: hasSpecialCharacter,
-                onChanged: handleSpecialCharacterSwitchChanged,
-              )
-            ],
-          ),
-          Row(
-            children: [
-              const Text('数字'),
-              const Expanded(child: SizedBox()),
-              Switch.adaptive(
-                value: hasNumber,
-                onChanged: handleNumberSwitchChanged,
-              )
-            ],
-          ),
-        ],
+        ),
       );
     }
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 200),
       child: child,
     );
   }
@@ -471,5 +467,38 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
       hasNumber = value;
     });
     widget.onGenerated?.call(password);
+  }
+}
+
+class _InsertField extends StatefulWidget {
+  const _InsertField({required this.label});
+
+  final String label;
+
+  @override
+  State<_InsertField> createState() => __InsertFieldState();
+}
+
+class __InsertFieldState extends State<_InsertField> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final bodySmall = textTheme.bodySmall;
+    return FormItem(
+      label: '',
+      leading: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.green,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: const Icon(Icons.add, color: Colors.white, size: 16),
+        ),
+      ),
+      child: Text(widget.label, style: bodySmall),
+    );
   }
 }

@@ -20,6 +20,8 @@ class Advance extends StatelessWidget {
         child: Column(
           children: [
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: ListTile(
                 title: const Text('开源软件声明'),

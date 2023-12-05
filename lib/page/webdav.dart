@@ -33,6 +33,8 @@ class _WebDAVState extends State<WebDAV> {
           children: [
             const SettingLabel(label: '配置'),
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: Column(
                 children: [
@@ -89,6 +91,8 @@ class _WebDAVState extends State<WebDAV> {
             ),
             const SizedBox(height: 16),
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
+              elevation: 0,
               margin: EdgeInsets.zero,
               child: Watcher((context, ref, _) {
                 return ListTile(
