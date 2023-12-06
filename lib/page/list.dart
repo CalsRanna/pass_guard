@@ -1,12 +1,13 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
-import 'package:password_generator/entity/password.dart';
-import 'package:password_generator/page/detail.dart';
+import 'package:isar/isar.dart';
 import 'package:password_generator/page/form.dart';
 import 'package:password_generator/page/setting.dart';
-import 'package:password_generator/state/global.dart';
-import 'package:password_generator/state/password.dart';
-import 'package:password_generator/widget/text_icon.dart';
+import 'package:password_generator/provider/guard.dart';
+import 'package:password_generator/router/router.dart';
+import 'package:password_generator/schema/guard.dart';
+import 'package:password_generator/schema/isar.dart';
+import 'package:password_generator/schema/migration.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PasswordList extends StatefulWidget {
   const PasswordList({super.key});
@@ -29,12 +30,26 @@ class _PasswordListState extends State<PasswordList> {
         filterList(controller.text);
       });
     super.initState();
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((timeStamp) async {
+      final migrated = await checkMigration();
+      if (!migrated) {
+        // ignore: use_build_context_synchronously
+        const MigrationRoute().push(context);
+      }
+    });
   }
 
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  Future<bool> checkMigration() async {
+    final count =
+        await isar.migrations.filter().nameEqualTo('floor_to_isar').count();
+    return count > 0;
   }
 
   @override
@@ -67,44 +82,27 @@ class _PasswordListState extends State<PasswordList> {
         focusNode: focusNode,
       );
     }
-    final body = Watcher((context, ref, _) {
-      final passwords = ref.watch(allPasswordsEmitter.asyncData).data;
-      if (passwords == null) {
-        return const Center(child: CircularProgressIndicator.adaptive());
-      } else {
-        if (passwords.isEmpty) {
-          return const Center(child: Text('暂无内容'));
-        } else {
-          return ListView.builder(
-            itemBuilder: (context, index) => ListTile(
-              leading: TextIcon(
-                size: const Size.square(48),
-                text: passwords[index].name,
-              ),
-              subtitle: Text(
-                passwords[index].username,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              title: Text(
-                passwords[index].name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right_outlined),
-              onTap: () => showDetail(context, passwords[index].id!),
-            ),
-            itemCount: passwords.length,
-          );
-        }
-      }
-    });
     return Scaffold(
       appBar: AppBar(
         actions: actions,
         title: title,
       ),
-      body: body,
+      body: Consumer(
+        builder: (context, ref, child) {
+          final guards = ref.watch(guardListNotifierProvider);
+          final a = switch (guards) {
+            AsyncData(:final value) => ListView.builder(
+                itemBuilder: (_, index) => _GuardListTile(
+                  guard: value[index],
+                  onTap: () => showDetail(value[index].id),
+                ),
+                itemCount: value.length,
+              ),
+            _ => const SizedBox(),
+          };
+          return a;
+        },
+      ),
       floatingActionButton: !showTextField
           ? FloatingActionButton(
               onPressed: () => handleNavigated(context, 'create'),
@@ -115,15 +113,15 @@ class _PasswordListState extends State<PasswordList> {
   }
 
   void filterList(String? text) async {
-    final ref = context.ref;
-    final database = context.ref.watch(databaseEmitter.asyncData).data;
-    List<Password>? passwords;
-    if (text == null || text.isEmpty) {
-      passwords = await database?.passwordDao.getAllPasswords();
-    } else {
-      passwords = await database?.passwordDao.getPasswordsLikeName('%$text%');
-    }
-    ref.emit(allPasswordsEmitter, passwords);
+    // final ref = context.ref;
+    // final database = context.ref.watch(databaseEmitter.asyncData).data;
+    // List<Password>? passwords;
+    // if (text == null || text.isEmpty) {
+    //   passwords = await database?.passwordDao.getAllPasswords();
+    // } else {
+    //   passwords = await database?.passwordDao.getPasswordsLikeName('%$text%');
+    // }
+    // ref.emit(allPasswordsEmitter, passwords);
   }
 
   void triggerTextField() {
@@ -151,10 +149,78 @@ class _PasswordListState extends State<PasswordList> {
     router.push(MaterialPageRoute(builder: (context) => page));
   }
 
-  void showDetail(BuildContext context, int id) {
-    final router = Navigator.of(context);
-    router.push(
-      MaterialPageRoute(builder: (context) => PasswordDetail(id: id)),
+  void showDetail(int id) {
+    GuardDetailRoute(id).push(context);
+  }
+}
+
+class _GuardListTile extends StatefulWidget {
+  const _GuardListTile({required this.guard, this.onTap});
+
+  final Guard guard;
+  final void Function()? onTap;
+
+  @override
+  State<StatefulWidget> createState() => __GuardListTileState();
+}
+
+class __GuardListTileState extends State<_GuardListTile> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final outlineVariant = colorScheme.outlineVariant;
+    final borderSide = BorderSide(color: outlineVariant);
+    final textTheme = theme.textTheme;
+    final bodyMedium = textTheme.bodyMedium;
+    final bodySmall = textTheme.bodySmall;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.cyan,
+              shape: BoxShape.circle,
+            ),
+            margin: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(4),
+            child: const Icon(
+              Icons.public_outlined,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(border: Border(bottom: borderSide)),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.guard.title, style: bodyMedium),
+                  Text(buildSubtitle(), style: bodySmall)
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
     );
+  }
+
+  String buildSubtitle() {
+    final segments = widget.guard.segments;
+    for (final segment in segments) {
+      final fields = segment.fields;
+      for (final field in fields) {
+        if (field.value.isNotEmpty) {
+          return field.value;
+        }
+      }
+    }
+    return '';
   }
 }

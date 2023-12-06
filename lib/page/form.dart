@@ -1,9 +1,10 @@
-import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:password_generator/entity/password.dart';
-import 'package:password_generator/state/global.dart';
-import 'package:password_generator/state/password.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:password_generator/provider/guard.dart';
+import 'package:password_generator/router/router.dart';
+import 'package:password_generator/schema/guard.dart';
+import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/util/password_generator.dart';
 import 'package:password_generator/widget/form_group.dart';
 import 'package:password_generator/widget/form_item.dart';
@@ -21,55 +22,35 @@ class PasswordForm extends StatefulWidget {
 }
 
 class _PasswordFormState extends State<PasswordForm> {
-  late TextEditingController commentController;
   String name = '';
-  late TextEditingController nameController;
   bool obscureText = true;
   String password = '';
-  late TextEditingController passwordController;
   bool showGenerator = false;
-  late TextEditingController usernameController;
+
+  var guard = Guard();
 
   @override
   void initState() {
-    commentController = TextEditingController();
-    nameController = TextEditingController();
-    nameController.addListener(() {
-      setState(() {
-        name = nameController.text;
-      });
-    });
-    usernameController = TextEditingController();
-    passwordController = TextEditingController();
-    passwordController.addListener(() {
-      setState(() {
-        password = passwordController.text;
-      });
-    });
+    // commentController = TextEditingController();
+    // nameController = TextEditingController();
+    // nameController.addListener(() {
+    //   setState(() {
+    //     name = nameController.text;
+    //   });
+    // });
+    // usernameController = TextEditingController();
+    // passwordController = TextEditingController();
+    // passwordController.addListener(() {
+    //   setState(() {
+    //     password = passwordController.text;
+    //   });
+    // });
     super.initState();
+    initGuard();
   }
 
-  @override
-  void didChangeDependencies() {
-    if (widget.id != null) {
-      final item =
-          context.ref.watch(passwordEmitter(widget.id!).asyncData).data;
-      commentController.text = item?.comment ?? '';
-      nameController.text = item?.name ?? '';
-      usernameController.text = item?.username ?? '';
-      passwordController.text = item?.password ?? '';
-      password = item?.password ?? '';
-    }
-    super.didChangeDependencies();
-  }
-
-  @override
-  void dispose() {
-    commentController.dispose();
-    nameController.dispose();
-    usernameController.dispose();
-    passwordController.dispose();
-    super.dispose();
+  void initGuard() async {
+    guard = await isar.guards.get(widget.id ?? 0) ?? Guard();
   }
 
   @override
@@ -81,10 +62,14 @@ class _PasswordFormState extends State<PasswordForm> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          TextButton(
-            onPressed: handleConfirm,
-            child: const Text('存储'),
-          )
+          Consumer(builder: (context, ref, child) {
+            final notifier = ref.read(guardListNotifierProvider.notifier);
+            return TextButton(
+              onPressed:
+                  guard.title.isNotEmpty ? () => handleConfirm(notifier) : null,
+              child: const Text('存储'),
+            );
+          })
         ],
         leading: TextButton(
           onPressed: handlePop,
@@ -96,126 +81,72 @@ class _PasswordFormState extends State<PasswordForm> {
         children: [
           FormGroup(
             child: FormItem(
+              bordered: false,
               label: '标题',
               child: Input(
-                initValue: name,
+                initValue: guard.title,
                 placeholder: '添加标题',
                 onChanged: (value) {
                   setState(() {
-                    name = value;
+                    guard.title = value;
                   });
                 },
               ),
             ),
           ),
-          FormGroup(
-            child: Column(
-              children: [
-                FormItem(
-                  label: '用户名',
-                  child: Input(controller: usernameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                FormItem(
-                  label: '电子邮箱',
-                  child: Input(controller: usernameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                FormItem(
-                  label: '密码',
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Input(
-                          controller: passwordController,
-                          placeholder: '密码',
-                          type:
-                              obscureText ? InputType.password : InputType.text,
-                        ),
+          for (final segment in guard.segments)
+            FormGroup(
+              title: segment.title,
+              child: Column(
+                children: [
+                  for (final field in segment.fields)
+                    FormItem(
+                      label: field.label,
+                      child: Input(
+                        initValue: field.value,
+                        onChanged: (value) {
+                          setState(() {
+                            field.value = value;
+                          });
+                        },
                       ),
-                      GestureDetector(
-                        onTap: switchObscureText,
-                        child: Icon(
-                          obscureText
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: primary,
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: toggleGenerator,
-                        child: Icon(
-                          Icons.settings_outlined,
-                          color: primary,
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
+                    ),
+                  _InsertAction(
+                    label: '添加字段',
+                    onTap: () => handleInsertField(segment),
                   ),
-                ),
-                _PasswordGenerator(
-                  password: password,
-                  showGenerator: showGenerator,
-                  onGenerated: handleGenerated,
-                ),
-                FormItem(
-                  label: '网站',
-                  child: Input(
-                    controller: usernameController,
-                  ),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                const _InsertField(label: '添加字段'),
-              ],
+                ],
+              ),
             ),
-          ),
           FormGroup(
-            title: '其他详细信息',
-            child: Column(
-              children: [
-                FormItem(
-                  label: '电话号码',
-                  child: Input(controller: nameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                FormItem(
-                  label: '一次性代码',
-                  child: Input(controller: nameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                FormItem(
-                  label: '密码保护的提问',
-                  child: Input(controller: nameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                FormItem(
-                  label: '密码保护的答案',
-                  child: Input(controller: nameController),
-                ),
-                Divider(height: 1, color: surfaceVariant),
-                const _InsertField(label: '添加字段'),
-              ],
+            child: _InsertAction(
+              label: '添加小节',
+              onTap: handleInsertSegment,
             ),
-          ),
-          const FormGroup(
-            title: '附件',
-            child: _InsertField(label: '添加文件'),
-          ),
-          FormGroup(
-            child: FormItem(
-              label: '备注',
-              child: Input(controller: commentController, placeholder: '备注'),
-            ),
-          ),
-          const FormGroup(
-            child: _InsertField(label: '添加小节'),
           ),
         ],
       ),
     );
+  }
+
+  void handleInsertField(Segment segment) async {
+    final field = await const InsertFieldPageRoute().push(context);
+    if (field != null) {
+      setState(() {
+        segment.fields.add(field);
+      });
+    }
+  }
+
+  void handleInsertSegment() async {
+    final name = await const InsertSegmentPageRoute().push(context);
+    if (name != null) {
+      setState(() {
+        final segment = Segment();
+        segment.title = name;
+        guard.segments.add(segment);
+      });
+    }
   }
 
   void switchObscureText() {
@@ -224,31 +155,35 @@ class _PasswordFormState extends State<PasswordForm> {
     });
   }
 
-  void handleConfirm() async {
-    final ref = context.ref;
-    var record = Password(
-      comment: commentController.text,
-      name: name,
-      username: usernameController.text,
-      password: password,
-    );
-    print(name);
-    final router = Navigator.of(context);
-    final database = await context.ref.read(databaseEmitter);
-    if (widget.id == null) {
-      await database.passwordDao.insertPassword(record);
-    } else {
-      final newPassword = record.copyWith(id: widget.id);
-      await database.passwordDao.updatePassword(newPassword);
-      ref.emit(passwordEmitter(widget.id!), newPassword);
+  void handleConfirm(GuardListNotifier notifier) async {
+    notifier.addGuard(guard);
+    if (mounted) {
+      GoRouter.of(context).pop();
     }
-    Hive.box('setting').put(
-      'local_version',
-      DateTime.now().millisecondsSinceEpoch,
-    );
-    final passwords = await database.passwordDao.getAllPasswords();
-    ref.emit(allPasswordsEmitter, passwords);
-    router.pop();
+
+    // final ref = context.ref;
+    // var record = Password(
+    //   comment: commentController.text,
+    //   name: name,
+    //   username: usernameController.text,
+    //   password: password,
+    // );
+    // final router = Navigator.of(context);
+    // final database = await context.ref.read(databaseEmitter);
+    // if (widget.id == null) {
+    //   await database.passwordDao.insertPassword(record);
+    // } else {
+    //   final newPassword = record.copyWith(id: widget.id);
+    //   await database.passwordDao.updatePassword(newPassword);
+    //   ref.emit(passwordEmitter(widget.id!), newPassword);
+    // }
+    // Hive.box('setting').put(
+    //   'local_version',
+    //   DateTime.now().millisecondsSinceEpoch,
+    // );
+    // final passwords = await database.passwordDao.getAllPasswords();
+    // ref.emit(allPasswordsEmitter, passwords);
+    // router.pop();
   }
 
   void handlePop() {
@@ -256,20 +191,20 @@ class _PasswordFormState extends State<PasswordForm> {
   }
 
   void toggleGenerator() {
-    if (password.isEmpty) {
-      passwordController.text = PasswordGenerator(
-        hasNumber: true,
-        hasSpecialCharacter: true,
-        length: 16,
-      ).generate();
-    }
-    setState(() {
-      showGenerator = !showGenerator;
-    });
+    // if (password.isEmpty) {
+    //   passwordController.text = PasswordGenerator(
+    //     hasNumber: true,
+    //     hasSpecialCharacter: true,
+    //     length: 16,
+    //   ).generate();
+    // }
+    // setState(() {
+    //   showGenerator = !showGenerator;
+    // });
   }
 
   void handleGenerated(String password) {
-    passwordController.text = password;
+    // passwordController.text = password;
   }
 
   void handleDelete(BuildContext context) async {
@@ -298,23 +233,23 @@ class _PasswordFormState extends State<PasswordForm> {
   }
 
   void confirmDelete(BuildContext context) async {
-    final ref = context.ref;
-    final router = Navigator.of(context);
-    final password = Password(
-      id: widget.id,
-      name: nameController.text,
-      username: usernameController.text,
-      password: passwordController.text,
-    );
-    final database = await context.ref.read(databaseEmitter);
-    await database.passwordDao.deletePassword(password);
-    Hive.box('setting').put(
-      'local_version',
-      DateTime.now().millisecondsSinceEpoch,
-    );
-    final passwords = await database.passwordDao.getAllPasswords();
-    ref.emit(allPasswordsEmitter, passwords);
-    router.popUntil(ModalRoute.withName('/'));
+    // final ref = context.ref;
+    // final router = Navigator.of(context);
+    // final password = Password(
+    //   id: widget.id,
+    //   name: nameController.text,
+    //   username: usernameController.text,
+    //   password: passwordController.text,
+    // );
+    // final database = await context.ref.read(databaseEmitter);
+    // await database.passwordDao.deletePassword(password);
+    // Hive.box('setting').put(
+    //   'local_version',
+    //   DateTime.now().millisecondsSinceEpoch,
+    // );
+    // final passwords = await database.passwordDao.getAllPasswords();
+    // ref.emit(allPasswordsEmitter, passwords);
+    // router.popUntil(ModalRoute.withName('/'));
   }
 }
 
@@ -471,9 +406,10 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
 }
 
 class _InsertField extends StatefulWidget {
-  const _InsertField({required this.label});
+  const _InsertField({required this.label, this.onTap});
 
   final String label;
+  final void Function()? onTap;
 
   @override
   State<_InsertField> createState() => __InsertFieldState();
@@ -485,20 +421,63 @@ class __InsertFieldState extends State<_InsertField> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final bodySmall = textTheme.bodySmall;
-    return FormItem(
-      label: '',
-      leading: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.green,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: FormItem(
+        label: '',
+        leading: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.green,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: const Icon(Icons.add, color: Colors.white, size: 16),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: const Icon(Icons.add, color: Colors.white, size: 16),
         ),
+        child: Text(widget.label, style: bodySmall),
       ),
-      child: Text(widget.label, style: bodySmall),
+    );
+  }
+}
+
+class _InsertAction extends StatefulWidget {
+  const _InsertAction({required this.label, this.onTap});
+
+  final String label;
+  final void Function()? onTap;
+
+  @override
+  State<_InsertAction> createState() => __InsertActionState();
+}
+
+class __InsertActionState extends State<_InsertAction> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final bodySmall = textTheme.bodySmall;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: FormItem(
+        bordered: false,
+        label: '',
+        leading: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.green,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: const Icon(Icons.add, color: Colors.white, size: 16),
+          ),
+        ),
+        child: Text(widget.label, style: bodySmall),
+      ),
     );
   }
 }

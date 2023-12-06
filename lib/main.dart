@@ -1,12 +1,15 @@
 import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:password_generator/page/list.dart';
+import 'package:password_generator/router/router.dart';
+import 'package:password_generator/schema/isar.dart';
 
 void main() async {
   await Hive.initFlutter();
   await Hive.openBox('setting');
-  runApp(CreatorGraph(child: const PasswordGenerator()));
+  await IsarInitializer.ensureInitialized();
+  runApp(CreatorGraph(child: const ProviderScope(child: PasswordGenerator())));
 }
 
 class PasswordGenerator extends StatelessWidget {
@@ -14,9 +17,6 @@ class PasswordGenerator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const PasswordList(),
-      theme: ThemeData(useMaterial3: true),
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 }
