@@ -39,7 +39,7 @@ class _InsertFieldPageState extends State<InsertFieldPage> {
                 FormItem(
                   label: '名称',
                   child: Input(
-                    initValue: label,
+                    initialValue: label,
                     onChanged: (value) {
                       setState(() {
                         label = value;
@@ -50,7 +50,7 @@ class _InsertFieldPageState extends State<InsertFieldPage> {
                 FormItem(
                   label: '类型',
                   child: Input(
-                    initValue: type,
+                    initialValue: type,
                     onChanged: (value) {
                       setState(() {
                         type = value;

@@ -10,6 +10,8 @@ List<RouteBase> get $appRoutes => [
       $homeRoute,
       $guardListRoute,
       $guardDetailRoute,
+      $createGuardRoute,
+      $editGuardRoute,
       $insertFieldPageRoute,
       $insertSegmentPageRoute,
       $migrationRoute,
@@ -72,6 +74,53 @@ extension $GuardDetailRouteExtension on GuardDetailRoute {
 
   String get location => GoRouteData.$location(
         '/guard/${Uri.encodeComponent(id.toString())}',
+      );
+
+  void go(BuildContext context) => context.go(location);
+
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $createGuardRoute => GoRouteData.$route(
+      path: '/guard/create',
+      factory: $CreateGuardRouteExtension._fromState,
+    );
+
+extension $CreateGuardRouteExtension on CreateGuardRoute {
+  static CreateGuardRoute _fromState(GoRouterState state) =>
+      const CreateGuardRoute();
+
+  String get location => GoRouteData.$location(
+        '/guard/create',
+      );
+
+  void go(BuildContext context) => context.go(location);
+
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $editGuardRoute => GoRouteData.$route(
+      path: '/guard/:id/edit',
+      factory: $EditGuardRouteExtension._fromState,
+    );
+
+extension $EditGuardRouteExtension on EditGuardRoute {
+  static EditGuardRoute _fromState(GoRouterState state) => EditGuardRoute(
+        int.parse(state.pathParameters['id']!),
+      );
+
+  String get location => GoRouteData.$location(
+        '/guard/${Uri.encodeComponent(id.toString())}/edit',
       );
 
   void go(BuildContext context) => context.go(location);

@@ -35,7 +35,7 @@ class _InsertSegmentPageState extends State<InsertSegmentPage> {
             child: FormItem(
               label: '名称',
               child: Input(
-                initValue: name,
+                initialValue: name,
                 onChanged: (value) {
                   setState(() {
                     name = value;

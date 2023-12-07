@@ -22,51 +22,35 @@ class PasswordForm extends StatefulWidget {
 }
 
 class _PasswordFormState extends State<PasswordForm> {
-  String name = '';
   bool obscureText = true;
-  String password = '';
   bool showGenerator = false;
 
   var guard = Guard();
 
   @override
   void initState() {
-    // commentController = TextEditingController();
-    // nameController = TextEditingController();
-    // nameController.addListener(() {
-    //   setState(() {
-    //     name = nameController.text;
-    //   });
-    // });
-    // usernameController = TextEditingController();
-    // passwordController = TextEditingController();
-    // passwordController.addListener(() {
-    //   setState(() {
-    //     password = passwordController.text;
-    //   });
-    // });
     super.initState();
-    initGuard();
+    findGuard();
   }
 
-  void initGuard() async {
-    guard = await isar.guards.get(widget.id ?? 0) ?? Guard();
+  void findGuard() async {
+    final guard = await isar.guards.get(widget.id ?? 0);
+    if (guard != null) {
+      setState(() {
+        this.guard = guard;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final surfaceVariant = colorScheme.surfaceVariant;
-    final primary = colorScheme.primary;
     return Scaffold(
       appBar: AppBar(
         actions: [
           Consumer(builder: (context, ref, child) {
-            final notifier = ref.read(guardListNotifierProvider.notifier);
+            final disabled = guard.title.isEmpty;
             return TextButton(
-              onPressed:
-                  guard.title.isNotEmpty ? () => handleConfirm(notifier) : null,
+              onPressed: disabled ? null : () => handleConfirm(ref),
               child: const Text('存储'),
             );
           })
@@ -80,11 +64,12 @@ class _PasswordFormState extends State<PasswordForm> {
       body: ListView(
         children: [
           FormGroup(
+            key: ValueKey(guard),
             child: FormItem(
               bordered: false,
               label: '标题',
               child: Input(
-                initValue: guard.title,
+                initialValue: guard.title,
                 placeholder: '添加标题',
                 onChanged: (value) {
                   setState(() {
@@ -103,7 +88,7 @@ class _PasswordFormState extends State<PasswordForm> {
                     FormItem(
                       label: field.label,
                       child: Input(
-                        initValue: field.value,
+                        initialValue: field.value,
                         onChanged: (value) {
                           setState(() {
                             field.value = value;
@@ -133,7 +118,7 @@ class _PasswordFormState extends State<PasswordForm> {
     final field = await const InsertFieldPageRoute().push(context);
     if (field != null) {
       setState(() {
-        segment.fields.add(field);
+        segment.fields = [...segment.fields, field];
       });
     }
   }
@@ -144,7 +129,7 @@ class _PasswordFormState extends State<PasswordForm> {
       setState(() {
         final segment = Segment();
         segment.title = name;
-        guard.segments.add(segment);
+        guard.segments = [...guard.segments, segment];
       });
     }
   }
@@ -155,101 +140,16 @@ class _PasswordFormState extends State<PasswordForm> {
     });
   }
 
-  void handleConfirm(GuardListNotifier notifier) async {
-    notifier.addGuard(guard);
+  void handleConfirm(WidgetRef ref) async {
+    final notifier = ref.read(guardListNotifierProvider.notifier);
+    notifier.putGuard(guard);
     if (mounted) {
       GoRouter.of(context).pop();
     }
-
-    // final ref = context.ref;
-    // var record = Password(
-    //   comment: commentController.text,
-    //   name: name,
-    //   username: usernameController.text,
-    //   password: password,
-    // );
-    // final router = Navigator.of(context);
-    // final database = await context.ref.read(databaseEmitter);
-    // if (widget.id == null) {
-    //   await database.passwordDao.insertPassword(record);
-    // } else {
-    //   final newPassword = record.copyWith(id: widget.id);
-    //   await database.passwordDao.updatePassword(newPassword);
-    //   ref.emit(passwordEmitter(widget.id!), newPassword);
-    // }
-    // Hive.box('setting').put(
-    //   'local_version',
-    //   DateTime.now().millisecondsSinceEpoch,
-    // );
-    // final passwords = await database.passwordDao.getAllPasswords();
-    // ref.emit(allPasswordsEmitter, passwords);
-    // router.pop();
   }
 
   void handlePop() {
     Navigator.of(context).pop();
-  }
-
-  void toggleGenerator() {
-    // if (password.isEmpty) {
-    //   passwordController.text = PasswordGenerator(
-    //     hasNumber: true,
-    //     hasSpecialCharacter: true,
-    //     length: 16,
-    //   ).generate();
-    // }
-    // setState(() {
-    //   showGenerator = !showGenerator;
-    // });
-  }
-
-  void handleGenerated(String password) {
-    // passwordController.text = password;
-  }
-
-  void handleDelete(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('你确定要删除“$name”吗?'),
-        content: const Text('此密码将被立即移除，并且无法再次找回。'),
-        actions: [
-          TextButton(
-              onPressed: () => cancelDelete(context), child: const Text('取消')),
-          TextButton(
-            onPressed: () => confirmDelete(context),
-            child: const Text(
-              '删除',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void cancelDelete(BuildContext context) {
-    Navigator.of(context).pop();
-  }
-
-  void confirmDelete(BuildContext context) async {
-    // final ref = context.ref;
-    // final router = Navigator.of(context);
-    // final password = Password(
-    //   id: widget.id,
-    //   name: nameController.text,
-    //   username: usernameController.text,
-    //   password: passwordController.text,
-    // );
-    // final database = await context.ref.read(databaseEmitter);
-    // await database.passwordDao.deletePassword(password);
-    // Hive.box('setting').put(
-    //   'local_version',
-    //   DateTime.now().millisecondsSinceEpoch,
-    // );
-    // final passwords = await database.passwordDao.getAllPasswords();
-    // ref.emit(allPasswordsEmitter, passwords);
-    // router.popUntil(ModalRoute.withName('/'));
   }
 }
 

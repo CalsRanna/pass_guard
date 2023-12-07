@@ -6,21 +6,7 @@ part of 'guard.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$getAllGuardsHash() => r'abbadfbd7c9f39b7a798f0840719494ec5279285';
-
-/// See also [getAllGuards].
-@ProviderFor(getAllGuards)
-final getAllGuardsProvider = AutoDisposeFutureProvider<List<Guard>>.internal(
-  getAllGuards,
-  name: r'getAllGuardsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$getAllGuardsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef GetAllGuardsRef = AutoDisposeFutureProviderRef<List<Guard>>;
-String _$findGuardHash() => r'9afe6d3fef9199d57fb9742aa6abeb4d74aa0d85';
+String _$findGuardHash() => r'f21b670e8834e2ce8ab1ca6d71e1670be821e303';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -168,7 +154,7 @@ class _FindGuardProviderElement extends AutoDisposeFutureProviderElement<Guard?>
   int get id => (origin as FindGuardProvider).id;
 }
 
-String _$guardListNotifierHash() => r'92e21f8192bec800be6edb8c62da2b62f6ec7fdc';
+String _$guardListNotifierHash() => r'8b8fb3ccdc7244758413950bd6def3c4b9bcbb4c';
 
 /// See also [GuardListNotifier].
 @ProviderFor(GuardListNotifier)

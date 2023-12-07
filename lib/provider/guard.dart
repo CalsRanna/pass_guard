@@ -6,18 +6,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'guard.g.dart';
 
 @riverpod
-Future<List<Guard>> getAllGuards(GetAllGuardsRef ref) async {
-  final guards = await isar.guards.where().findAll();
-  return guards;
-}
-
-@riverpod
-Future<Guard?> findGuard(FindGuardRef ref, int id) async {
-  final guard = await isar.guards.get(id);
-  return guard;
-}
-
-@riverpod
 class GuardListNotifier extends _$GuardListNotifier {
   @override
   Future<List<Guard>> build() async {
@@ -25,11 +13,26 @@ class GuardListNotifier extends _$GuardListNotifier {
     return guards;
   }
 
-  Future<void> addGuard(Guard guard) async {
+  Future<void> putGuard(Guard guard) async {
+    guard.updatedAt = DateTime.now();
     await isar.writeTxn(() async {
       await isar.guards.put(guard);
     });
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> destroyGuard(int id) async {
+    await isar.writeTxn(() async {
+      await isar.guards.delete(id);
+    });
+    ref.invalidateSelf();
+    await future;
+  }
+}
+
+@riverpod
+Future<Guard?> findGuard(FindGuardRef ref, int id) async {
+  final guards = await ref.watch(guardListNotifierProvider.future);
+  return guards.where((guard) => guard.id == id).firstOrNull;
 }

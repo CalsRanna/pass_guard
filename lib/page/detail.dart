@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:password_generator/page/form.dart';
+import 'package:go_router/go_router.dart';
 import 'package:password_generator/provider/guard.dart';
+import 'package:password_generator/router/router.dart';
 import 'package:password_generator/schema/guard.dart';
 
 class PasswordDetail extends StatelessWidget {
@@ -31,7 +32,7 @@ class PasswordDetail extends StatelessWidget {
         backgroundColor: Colors.white,
       ),
       body: Consumer(builder: (context, ref, child) {
-        final guard = ref.watch(findGuardProvider(id));
+        final guard = ref.watch(FindGuardProvider(id));
         final child = switch (guard) {
           AsyncData(:final value) => ListView(
               children: [
@@ -98,7 +99,10 @@ class PasswordDetail extends StatelessWidget {
                       _ActionTile(label: '添加到收藏夹', onTap: () {}),
                       _ActionTile(label: '共享', onTap: () {}),
                       _ActionTile(label: '复制', onTap: () {}),
-                      _ActionTile(label: '移到垃圾桶', onTap: () {}),
+                      _ActionTile(
+                        label: '移到垃圾桶',
+                        onTap: () => destroyGuard(context, ref),
+                      ),
                       _ActionTile(label: '归档', onTap: () {}),
                       _ActionTile(label: '更改类别', onTap: () {}),
                       Container(
@@ -131,13 +135,16 @@ class PasswordDetail extends StatelessWidget {
   }
 
   void handleNavigated(BuildContext context) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, _, __) => PasswordForm(id: id),
-        reverseTransitionDuration: Duration.zero,
-        transitionDuration: Duration.zero,
-      ),
-    );
+    EditGuardRoute(id).push(context);
+  }
+
+  void destroyGuard(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(guardListNotifierProvider.notifier);
+    await notifier.destroyGuard(id);
+    if (!context.mounted) {
+      return;
+    }
+    GoRouter.of(context).pop();
   }
 }
 
@@ -257,11 +264,15 @@ class __ActionTileState extends State<_ActionTile> {
     final primary = colorScheme.primary;
     final outlineVariant = colorScheme.outlineVariant.withOpacity(0.25);
     final borderSide = BorderSide(color: outlineVariant);
-    return Container(
-      decoration: BoxDecoration(border: Border(bottom: borderSide)),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      width: double.infinity,
-      child: Text(widget.label, style: bodyMedium?.copyWith(color: primary)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: Container(
+        decoration: BoxDecoration(border: Border(bottom: borderSide)),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        width: double.infinity,
+        child: Text(widget.label, style: bodyMedium?.copyWith(color: primary)),
+      ),
     );
   }
 }

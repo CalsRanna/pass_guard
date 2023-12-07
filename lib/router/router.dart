@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:password_generator/page/detail.dart';
+import 'package:password_generator/page/form.dart';
 import 'package:password_generator/page/form/component/insert_field.dart';
 import 'package:password_generator/page/form/component/insert_segment.dart';
 import 'package:password_generator/page/list.dart';
@@ -41,6 +42,28 @@ class GuardDetailRoute extends GoRouteData {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return PasswordDetail(id: id);
+  }
+}
+
+@TypedGoRoute<CreateGuardRoute>(path: '/guard/create')
+class CreateGuardRoute extends GoRouteData {
+  const CreateGuardRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const PasswordForm();
+  }
+}
+
+@TypedGoRoute<EditGuardRoute>(path: '/guard/:id/edit')
+class EditGuardRoute extends GoRouteData {
+  const EditGuardRoute(this.id);
+
+  final int id;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return PasswordForm(id: id);
   }
 }
 
