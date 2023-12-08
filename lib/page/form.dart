@@ -101,17 +101,27 @@ class _PasswordFormState extends State<PasswordForm> {
               child: Column(
                 children: [
                   for (final field in segment.fields)
-                    FormItem(
-                      label: field.label,
-                      child: Input(
-                        initialValue: field.value,
-                        onChanged: (value) {
-                          setState(() {
-                            field.value = value;
-                          });
-                        },
+                    Column(children: [
+                      FormItem(
+                        label: field.label,
+                        child: Input(
+                          initialValue: field.value,
+                          type: field.type == 'password'
+                              ? InputType.password
+                              : InputType.text,
+                          onChanged: (value) {
+                            setState(() {
+                              field.value = value;
+                            });
+                          },
+                        ),
                       ),
-                    ),
+                      if (field.type == 'password')
+                        _GeneratePassword(
+                          label: '生成密码',
+                          onTap: () => handleGeneratePassword(field),
+                        ),
+                    ]),
                   _InsertAction(
                     label: '添加字段',
                     onTap: () => handleInsertField(segment),
@@ -128,6 +138,20 @@ class _PasswordFormState extends State<PasswordForm> {
         ],
       ),
     );
+  }
+
+  void handleGeneratePassword(Field field) async {
+    setState(() {
+      final password = PasswordGenerator(
+        hasNumber: true,
+        hasSpecialCharacter: true,
+        length: 16.toInt(),
+      ).generate();
+      print(password);
+      setState(() {
+        field.value = password;
+      });
+    });
   }
 
   void handleInsertField(Segment segment) async {
@@ -318,6 +342,44 @@ class __PasswordGeneratorState extends State<_PasswordGenerator> {
       hasNumber = value;
     });
     widget.onGenerated?.call(password);
+  }
+}
+
+class _GeneratePassword extends StatefulWidget {
+  const _GeneratePassword({required this.label, this.onTap});
+
+  final String label;
+  final void Function()? onTap;
+
+  @override
+  State<_GeneratePassword> createState() => __GeneratePasswordState();
+}
+
+class __GeneratePasswordState extends State<_GeneratePassword> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final bodySmall = textTheme.bodySmall;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: FormItem(
+        label: '',
+        leading: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.green,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: const Icon(Icons.pin, color: Colors.white, size: 16),
+          ),
+        ),
+        child: Text(widget.label, style: bodySmall),
+      ),
+    );
   }
 }
 

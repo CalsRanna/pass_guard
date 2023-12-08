@@ -17,7 +17,6 @@ class Guard {
 
   factory Guard.fromJson(Map<String, dynamic> json) {
     final guard = Guard();
-    guard.id = json['id'] ?? Isar.autoIncrement;
     guard.title = json['title'] ?? '';
     guard.segments = (json['segments'] as List)
         .map((segment) => Segment.fromJson(segment))

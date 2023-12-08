@@ -19,7 +19,6 @@ class GuardTemplate {
   // fromJson
   factory GuardTemplate.fromJson(Map<String, dynamic> json) {
     final template = GuardTemplate();
-    template.id = json['id'] ?? Isar.autoIncrement;
     template.name = json['name'];
     template.segments = (json['segments'] as List)
         .map((segment) => Segment.fromJson(segment))

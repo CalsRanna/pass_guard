@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:password_generator/provider/guard.dart';
@@ -209,38 +210,118 @@ class _FieldTile extends StatefulWidget {
 }
 
 class __FieldTileState extends State<_FieldTile> {
+  bool pressed = false;
+  bool show = false;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final bodySmall = textTheme.bodySmall;
+    final bodyMedium = textTheme.bodyMedium;
     final colorScheme = theme.colorScheme;
     final primary = colorScheme.primary;
     final outlineVariant = colorScheme.outlineVariant.withOpacity(0.25);
     final borderSide = BorderSide(color: outlineVariant);
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: widget.bordered ? borderSide : BorderSide.none),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.field.label,
-            style: bodySmall?.copyWith(color: primary),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: handleTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: widget.bordered ? borderSide : BorderSide.none,
           ),
-          const SizedBox(height: 4),
-          Text(
-            widget.field.type == 'password'
-                ? '••••••••••••••••'
-                : widget.field.value,
-            style: bodySmall,
-          ),
-        ],
+        ),
+        // width: double.infinity,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.field.label,
+                          style: bodySmall?.copyWith(color: primary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.field.type == 'password' && !show
+                              ? '••••••••••••••••'
+                              : widget.field.value,
+                          style: bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.field.type == 'password')
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: GestureDetector(
+                        onTap: showPassword,
+                        child: Icon(
+                          show
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: primary,
+                          size: 16,
+                        ),
+                      ),
+                    )
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: copy,
+                child: AnimatedContainer(
+                  alignment: Alignment.center,
+                  duration: const Duration(milliseconds: 150),
+                  width: pressed ? 72 : 0,
+                  height: 52,
+                  color: Colors.green[400],
+                  child: Text(
+                    '复制',
+                    maxLines: 1,
+                    style: bodyMedium?.copyWith(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void handleTap() {
+    setState(() {
+      pressed = !pressed;
+    });
+  }
+
+  void showPassword() {
+    setState(() {
+      show = !show;
+    });
+  }
+
+  void copy() {
+    Clipboard.setData(ClipboardData(text: widget.field.value));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text('已复制到剪贴板', textAlign: TextAlign.center),
+        width: 132,
+      ),
+    );
+    setState(() {
+      pressed = !pressed;
+    });
   }
 }
 
