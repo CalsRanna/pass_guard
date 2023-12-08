@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:isar/isar.dart';
 import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/router/router.dart';
 import 'package:password_generator/schema/guard.dart';
+import 'package:password_generator/schema/guard_template.dart';
 import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/util/password_generator.dart';
 import 'package:password_generator/widget/form_group.dart';
@@ -11,9 +13,10 @@ import 'package:password_generator/widget/form_item.dart';
 import 'package:password_generator/widget/input.dart';
 
 class PasswordForm extends StatefulWidget {
-  const PasswordForm({super.key, this.id});
+  const PasswordForm({super.key, this.id, this.template});
 
   final int? id;
+  final String? template;
 
   @override
   State<PasswordForm> createState() {
@@ -30,16 +33,29 @@ class _PasswordFormState extends State<PasswordForm> {
   @override
   void initState() {
     super.initState();
+    initGuard();
     findGuard();
   }
 
+  void initGuard() async {
+    if (widget.template == null) return;
+    final template = await isar.guardTemplates
+        .filter()
+        .nameEqualTo(widget.template!)
+        .findFirst();
+    if (template == null) return;
+    setState(() {
+      guard = Guard.fromJson(template.toJson());
+    });
+  }
+
   void findGuard() async {
-    final guard = await isar.guards.get(widget.id ?? 0);
-    if (guard != null) {
-      setState(() {
-        this.guard = guard;
-      });
-    }
+    if (widget.id == null) return;
+    final guard = await isar.guards.get(widget.id!);
+    if (guard == null) return;
+    setState(() {
+      this.guard = guard;
+    });
   }
 
   @override

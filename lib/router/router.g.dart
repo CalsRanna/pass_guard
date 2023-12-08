@@ -9,8 +9,8 @@ part of 'router.dart';
 List<RouteBase> get $appRoutes => [
       $homeRoute,
       $guardListRoute,
-      $guardDetailRoute,
       $createGuardRoute,
+      $guardDetailRoute,
       $editGuardRoute,
       $insertFieldPageRoute,
       $insertSegmentPageRoute,
@@ -62,18 +62,21 @@ extension $GuardListRouteExtension on GuardListRoute {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $guardDetailRoute => GoRouteData.$route(
-      path: '/guard/:id',
-      factory: $GuardDetailRouteExtension._fromState,
+RouteBase get $createGuardRoute => GoRouteData.$route(
+      path: '/guard/create',
+      factory: $CreateGuardRouteExtension._fromState,
     );
 
-extension $GuardDetailRouteExtension on GuardDetailRoute {
-  static GuardDetailRoute _fromState(GoRouterState state) => GuardDetailRoute(
-        int.parse(state.pathParameters['id']!),
+extension $CreateGuardRouteExtension on CreateGuardRoute {
+  static CreateGuardRoute _fromState(GoRouterState state) => CreateGuardRoute(
+        template: state.uri.queryParameters['template'] ?? "默认",
       );
 
   String get location => GoRouteData.$location(
-        '/guard/${Uri.encodeComponent(id.toString())}',
+        '/guard/create',
+        queryParams: {
+          if (template != "默认") 'template': template,
+        },
       );
 
   void go(BuildContext context) => context.go(location);
@@ -86,17 +89,18 @@ extension $GuardDetailRouteExtension on GuardDetailRoute {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $createGuardRoute => GoRouteData.$route(
-      path: '/guard/create',
-      factory: $CreateGuardRouteExtension._fromState,
+RouteBase get $guardDetailRoute => GoRouteData.$route(
+      path: '/guard/:id',
+      factory: $GuardDetailRouteExtension._fromState,
     );
 
-extension $CreateGuardRouteExtension on CreateGuardRoute {
-  static CreateGuardRoute _fromState(GoRouterState state) =>
-      const CreateGuardRoute();
+extension $GuardDetailRouteExtension on GuardDetailRoute {
+  static GuardDetailRoute _fromState(GoRouterState state) => GuardDetailRoute(
+        int.parse(state.pathParameters['id']!),
+      );
 
   String get location => GoRouteData.$location(
-        '/guard/create',
+        '/guard/${Uri.encodeComponent(id.toString())}',
       );
 
   void go(BuildContext context) => context.go(location);

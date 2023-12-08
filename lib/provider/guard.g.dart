@@ -154,7 +154,7 @@ class _FindGuardProviderElement extends AutoDisposeFutureProviderElement<Guard?>
   int get id => (origin as FindGuardProvider).id;
 }
 
-String _$guardListNotifierHash() => r'8b8fb3ccdc7244758413950bd6def3c4b9bcbb4c';
+String _$guardListNotifierHash() => r'3be0b3ac43e9ed70eb68473d4541c52ae9b8ec59';
 
 /// See also [GuardListNotifier].
 @ProviderFor(GuardListNotifier)

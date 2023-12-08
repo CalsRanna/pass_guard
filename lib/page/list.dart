@@ -33,8 +33,7 @@ class _PasswordListState extends State<PasswordList> {
     final binding = WidgetsBinding.instance;
     binding.addPostFrameCallback((timeStamp) async {
       final migrated = await checkMigration();
-      if (!migrated) {
-        // ignore: use_build_context_synchronously
+      if (!migrated && mounted) {
         const MigrationRoute().push(context);
       }
     });
@@ -112,17 +111,7 @@ class _PasswordListState extends State<PasswordList> {
     );
   }
 
-  void filterList(String? text) async {
-    // final ref = context.ref;
-    // final database = context.ref.watch(databaseEmitter.asyncData).data;
-    // List<Password>? passwords;
-    // if (text == null || text.isEmpty) {
-    //   passwords = await database?.passwordDao.getAllPasswords();
-    // } else {
-    //   passwords = await database?.passwordDao.getPasswordsLikeName('%$text%');
-    // }
-    // ref.emit(allPasswordsEmitter, passwords);
-  }
+  void filterList(String? text) async {}
 
   void triggerTextField() {
     if (!showTextField) {
@@ -139,14 +128,18 @@ class _PasswordListState extends State<PasswordList> {
   }
 
   void handleNavigated(BuildContext context, String route) {
-    final router = Navigator.of(context);
-    Widget page;
     if (route == 'create') {
-      page = const PasswordForm();
+      const CreateGuardRoute().push(context);
     } else {
-      page = const Setting();
+      final router = Navigator.of(context);
+      Widget page;
+      if (route == 'create') {
+        page = const PasswordForm();
+      } else {
+        page = const Setting();
+      }
+      router.push(MaterialPageRoute(builder: (context) => page));
     }
-    router.push(MaterialPageRoute(builder: (context) => page));
   }
 
   void showDetail(int id) {

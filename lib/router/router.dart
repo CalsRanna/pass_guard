@@ -33,6 +33,18 @@ class GuardListRoute extends GoRouteData {
   }
 }
 
+@TypedGoRoute<CreateGuardRoute>(path: '/guard/create')
+class CreateGuardRoute extends GoRouteData {
+  const CreateGuardRoute({this.template = "默认"});
+
+  final String template;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return PasswordForm(template: template);
+  }
+}
+
 @TypedGoRoute<GuardDetailRoute>(path: '/guard/:id')
 class GuardDetailRoute extends GoRouteData {
   const GuardDetailRoute(this.id);
@@ -42,16 +54,6 @@ class GuardDetailRoute extends GoRouteData {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return PasswordDetail(id: id);
-  }
-}
-
-@TypedGoRoute<CreateGuardRoute>(path: '/guard/create')
-class CreateGuardRoute extends GoRouteData {
-  const CreateGuardRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) {
-    return const PasswordForm();
   }
 }
 

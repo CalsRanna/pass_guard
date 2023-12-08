@@ -1,6 +1,8 @@
 import 'package:creator/creator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/schema/guard.dart';
 import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/schema/migration.dart';
@@ -37,7 +39,12 @@ class _MigrationPageState extends State<MigrationPage> {
               ),
               textAlign: TextAlign.center,
             ),
-            ElevatedButton(onPressed: migrate, child: const Text('开始迁移'))
+            Consumer(
+              builder: (_, ref, child) => ElevatedButton(
+                onPressed: () => migrate(ref),
+                child: const Text('开始迁移'),
+              ),
+            )
           ],
         ),
       ),
@@ -61,7 +68,7 @@ class _MigrationPageState extends State<MigrationPage> {
     });
   }
 
-  void migrate() async {
+  void migrate(WidgetRef ref) async {
     final database = await context.ref.read(databaseEmitter);
     final passwords = await database.passwordDao.getAllPasswords();
     for (final password in passwords) {
@@ -97,7 +104,9 @@ class _MigrationPageState extends State<MigrationPage> {
     await isar.writeTxn(() async {
       await isar.migrations.put(migration);
     });
-    // ignore: use_build_context_synchronously
-    GoRouter.of(context).pop();
+    ref.invalidate(guardListNotifierProvider);
+    if (mounted) {
+      GoRouter.of(context).pop();
+    }
   }
 }
