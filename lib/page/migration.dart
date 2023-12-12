@@ -8,14 +8,33 @@ import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/schema/migration.dart';
 import 'package:password_generator/state/global.dart';
 
+/// A StatefulWidget that handles the migration process within the app.
+///
+/// Displays a page that allows users to initiate and manage database migrations.
+/// This is typically used when the app's data schema has been updated and
+/// existing data needs to be migrated to the new schema version.
 class MigrationPage extends StatefulWidget {
+  /// Creates an instance of [MigrationPage].
+  ///
+  /// This constructor is used to create a new MigrationPage widget
+  /// that handles the migration process within the app.
   const MigrationPage({super.key});
 
   @override
   State<MigrationPage> createState() => _MigrationPageState();
 }
 
+/// Represents the state for [MigrationPage].
+///
+/// This state is responsible for handling the migration process of the app's
+/// local database. It provides a visual guide and interactive elements to
+/// assist the user in migrating their data to the latest database schema.
 class _MigrationPageState extends State<MigrationPage> {
+  /// The current number of migrations that have been processed.
+  ///
+  /// This counter is incremented as each migration is successfully completed.
+  /// It is used to track the progress of the migration process and provide
+  /// feedback to the user.
   int count = 0;
   @override
   Widget build(BuildContext context) {
@@ -60,6 +79,10 @@ class _MigrationPageState extends State<MigrationPage> {
     });
   }
 
+  /// Retrieves all passwords from the database and updates the state with the count.
+  ///
+  /// This function makes a call to the database to fetch all the passwords,
+  /// then it sets the state with the total number of passwords retrieved.
   void getAllPasswords() async {
     final database = await context.ref.read(databaseEmitter);
     final passwords = await database.passwordDao.getAllPasswords();
@@ -68,6 +91,17 @@ class _MigrationPageState extends State<MigrationPage> {
     });
   }
 
+  /// Initiates the migration of passwords to a new storage system.
+  ///
+  /// This asynchronous function retrieves all passwords from the old database,
+  /// creates a corresponding new data structure for each, then saves them
+  /// into the new database using Isar. After migration, it updates the
+  /// migration status and navigates back to the previous screen.
+  ///
+  /// The function takes a [WidgetRef] parameter, which is used to read from
+  /// and write to the state and to interact with the database through providers.
+  ///
+  /// [ref] The WidgetRef used for interacting with providers.
   void migrate(WidgetRef ref) async {
     final database = await context.ref.read(databaseEmitter);
     final passwords = await database.passwordDao.getAllPasswords();

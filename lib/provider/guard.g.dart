@@ -29,16 +29,60 @@ class _SystemHash {
   }
 }
 
-/// See also [findGuard].
+/// Finds and returns a [Guard] object by its [id].
+///
+/// This method retrieves the list of guards from the [guardListNotifierProvider]
+/// and filters it to find the guard with the provided [id].
+/// If found, it returns the [Guard] object, otherwise returns null.
+///
+/// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+/// [id] - The unique identifier of the [Guard] object to find.
+///
+/// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+///
+/// Copied from [findGuard].
 @ProviderFor(findGuard)
 const findGuardProvider = FindGuardFamily();
 
-/// See also [findGuard].
+/// Finds and returns a [Guard] object by its [id].
+///
+/// This method retrieves the list of guards from the [guardListNotifierProvider]
+/// and filters it to find the guard with the provided [id].
+/// If found, it returns the [Guard] object, otherwise returns null.
+///
+/// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+/// [id] - The unique identifier of the [Guard] object to find.
+///
+/// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+///
+/// Copied from [findGuard].
 class FindGuardFamily extends Family<AsyncValue<Guard?>> {
-  /// See also [findGuard].
+  /// Finds and returns a [Guard] object by its [id].
+  ///
+  /// This method retrieves the list of guards from the [guardListNotifierProvider]
+  /// and filters it to find the guard with the provided [id].
+  /// If found, it returns the [Guard] object, otherwise returns null.
+  ///
+  /// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+  /// [id] - The unique identifier of the [Guard] object to find.
+  ///
+  /// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+  ///
+  /// Copied from [findGuard].
   const FindGuardFamily();
 
-  /// See also [findGuard].
+  /// Finds and returns a [Guard] object by its [id].
+  ///
+  /// This method retrieves the list of guards from the [guardListNotifierProvider]
+  /// and filters it to find the guard with the provided [id].
+  /// If found, it returns the [Guard] object, otherwise returns null.
+  ///
+  /// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+  /// [id] - The unique identifier of the [Guard] object to find.
+  ///
+  /// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+  ///
+  /// Copied from [findGuard].
   FindGuardProvider call(
     int id,
   ) {
@@ -71,9 +115,31 @@ class FindGuardFamily extends Family<AsyncValue<Guard?>> {
   String? get name => r'findGuardProvider';
 }
 
-/// See also [findGuard].
+/// Finds and returns a [Guard] object by its [id].
+///
+/// This method retrieves the list of guards from the [guardListNotifierProvider]
+/// and filters it to find the guard with the provided [id].
+/// If found, it returns the [Guard] object, otherwise returns null.
+///
+/// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+/// [id] - The unique identifier of the [Guard] object to find.
+///
+/// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+///
+/// Copied from [findGuard].
 class FindGuardProvider extends AutoDisposeFutureProvider<Guard?> {
-  /// See also [findGuard].
+  /// Finds and returns a [Guard] object by its [id].
+  ///
+  /// This method retrieves the list of guards from the [guardListNotifierProvider]
+  /// and filters it to find the guard with the provided [id].
+  /// If found, it returns the [Guard] object, otherwise returns null.
+  ///
+  /// [ref] - The [FindGuardRef] instance to observe the [guardListNotifierProvider].
+  /// [id] - The unique identifier of the [Guard] object to find.
+  ///
+  /// Returns [Guard?] - The [Guard] object with the matching [id] or null if not found.
+  ///
+  /// Copied from [findGuard].
   FindGuardProvider(
     int id,
   ) : this._internal(
@@ -156,7 +222,14 @@ class _FindGuardProviderElement extends AutoDisposeFutureProviderElement<Guard?>
 
 String _$guardListNotifierHash() => r'3be0b3ac43e9ed70eb68473d4541c52ae9b8ec59';
 
-/// See also [GuardListNotifier].
+/// Manages a list of [Guard] objects by interfacing with the Isar database.
+///
+/// This notifier provides asynchronous operations to read and modify the list
+/// of guards. It includes methods to retrieve all guards, add or update a single
+/// guard, and delete a guard by id. Changes to the list are persisted in the
+/// Isar database and will trigger an update to all listeners.
+///
+/// Copied from [GuardListNotifier].
 @ProviderFor(GuardListNotifier)
 final guardListNotifierProvider =
     AutoDisposeAsyncNotifierProvider<GuardListNotifier, List<Guard>>.internal(

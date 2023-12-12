@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:password_generator/page/form.dart';
+import 'package:password_generator/page/form/form.dart';
 import 'package:password_generator/page/setting.dart';
 import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/router/router.dart';
@@ -9,6 +9,10 @@ import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/schema/migration.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// A StatefulWidget that renders a list of passwords.
+///
+/// This screen is used to display and manage a list of passwords for the user.
+/// It allows for operations such as viewing, editing, and deleting passwords.
 class PasswordList extends StatefulWidget {
   const PasswordList({super.key});
 
@@ -45,6 +49,14 @@ class _PasswordListState extends State<PasswordList> {
     super.dispose();
   }
 
+  /// Checks if the migration from 'floor' to 'isar' has been completed.
+  ///
+  /// It queries the 'migrations' collection in the Isar database to check if the
+  /// migration named 'floor_to_isar' has been counted. If the count is greater
+  /// than zero, it means the migration has already been done.
+  ///
+  /// Returns a [Future<bool>] that completes with `true` if the migration is done,
+  /// otherwise `false`.
   Future<bool> checkMigration() async {
     final count =
         await isar.migrations.filter().nameEqualTo('floor_to_isar').count();
@@ -142,6 +154,12 @@ class _PasswordListState extends State<PasswordList> {
     }
   }
 
+  /// Navigates to the detail page for a given guard.
+  ///
+  /// Pushes the [GuardDetailRoute] with the specified [id] onto the navigation
+  /// stack to show the detail information of the guard.
+  ///
+  /// [id] The unique identifier of the guard whose detail is to be shown.
   void showDetail(int id) {
     GuardDetailRoute(id).push(context);
   }

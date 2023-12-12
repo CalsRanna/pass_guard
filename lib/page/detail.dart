@@ -6,9 +6,24 @@ import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/router/router.dart';
 import 'package:password_generator/schema/guard.dart';
 
+/// A [StatelessWidget] that displays the detail of a specific password entry.
+///
+/// It takes an integer [id] which corresponds to the unique identifier of
+/// the password entry that will be displayed.
 class PasswordDetail extends StatelessWidget {
+  /// Creates a widget that displays the details of a password entry.
+  ///
+  /// This widget presents the information associated with the password
+  /// whose unique identifier matches the provided [id].
+  ///
+  /// The [id] parameter must not be null and must correspond to an existing
+  /// password entry.
   const PasswordDetail({super.key, required this.id});
 
+  /// The unique identifier of the password entry that this widget details.
+  ///
+  /// This value corresponds to a specific password entry and should be provided
+  /// to look up the entry's details for display. It must not be null.
   final int id;
 
   @override
@@ -135,10 +150,25 @@ class PasswordDetail extends StatelessWidget {
     );
   }
 
+  /// Navigates to the [EditGuardRoute] with the specified [id].
+  ///
+  /// This method pushes the [EditGuardRoute] onto the navigation stack,
+  /// allowing the user to edit the guard information.
+  ///
+  /// [context] is the BuildContext from which navigation is initiated.
   void handleNavigated(BuildContext context) {
     EditGuardRoute(id).push(context);
   }
 
+  /// Destroys a guard entry and pops the current route from the navigation stack.
+  ///
+  /// This method deletes the guard with the given [id] from the list of guards
+  /// using the [GuardListNotifier]. After successfully deleting the guard, it
+  /// checks if the [BuildContext] is still mounted and if so, it pops the
+  /// current route from the navigation stack to return to the previous screen.
+  ///
+  /// [context] is the BuildContext from which the operation is initiated.
+  /// [ref] is the WidgetRef for accessing the provider scope and reading providers.
   void destroyGuard(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(guardListNotifierProvider.notifier);
     await notifier.destroyGuard(id);
@@ -149,9 +179,27 @@ class PasswordDetail extends StatelessWidget {
   }
 }
 
+/// Represents a tile widget displaying information about a [Segment].
+///
+/// This is a stateless widget that takes a [Segment] object and displays
+/// its properties in a tile format. It is used in a list or grid to represent
+/// individual segment data visually.
 class _SegmentTile extends StatelessWidget {
+  /// The [_SegmentTile] widget displays a segment with a title and a list of fields.
+  ///
+  /// This stateless widget takes a [Segment] object and constructs a tile
+  /// that represents the segment's information. The segment's title is displayed
+  /// at the top, followed by a list of fields contained within the segment.
+  /// Each field is represented as a [_FieldTile].
+  ///
+  /// Requires a [segment] parameter of type [Segment] to be provided.
   const _SegmentTile({required this.segment});
 
+  /// The [segment] holds the data for a particular segment.
+  ///
+  /// It contains all the information about a segment, such as its title
+  /// and the list of fields within it. This property must be provided
+  /// when creating a new [_SegmentTile] and cannot be null.
   final Segment segment;
 
   @override
@@ -199,18 +247,61 @@ class _SegmentTile extends StatelessWidget {
   }
 }
 
+/// The [_FieldTile] widget displays a single field within a segment.
+///
+/// This widget is responsible for rendering the UI representation of a `Field`
+/// object. It can show a border if specified. The appearance of the field
+/// can be customized via the `bordered` parameter.
 class _FieldTile extends StatefulWidget {
+  /// Creates a widget that represents a field within a segment with an optional border.
+  ///
+  /// This widget takes a [Field] object to display its data and can be configured
+  /// to show a border at the bottom by setting the [bordered] parameter to `true`.
+  /// The border visibility helps in distinguishing individual fields when presented
+  /// in a list.
+  ///
+  /// The [field] parameter must not be null and it contains the data for the field
+  /// that this widget will display.
+  ///
+  /// The default value of [bordered] is `true`, which will show the border.
   const _FieldTile({this.bordered = true, required this.field});
 
+  /// Indicates whether a bottom border should be displayed.
+  ///
+  /// If set to `true`, a visual bottom border is rendered beneath the field tile,
+  /// which can be useful for separating each field when displayed in a list view.
+  /// If `false`, no border is rendered, providing a seamless appearance.
   final bool bordered;
+
+  /// The data model for a field within a segment.
+  ///
+  /// This property holds the [Field] object containing the relevant data
+  /// to be displayed in the [_FieldTile] widget.
   final Field field;
 
   @override
   State<StatefulWidget> createState() => __FieldTileState();
 }
 
+/// The [__FieldTileState] is the state for [_FieldTile] widget.
+///
+/// This class manages the state for the [_FieldTile] widget such as whether
+/// the tile is pressed or if the details of the field should be shown.
+/// It works in conjunction with [_FieldTile] to present individual field data.
 class __FieldTileState extends State<_FieldTile> {
+  /// Indicates whether the field tile is currently pressed.
+  ///
+  /// This variable is a boolean that toggles to true when the user
+  /// presses the tile, and it reverts to false when the tile is released.
+  /// It is used to update the tile's appearance in response to user interaction.
   bool pressed = false;
+
+  /// Determines whether the details of the field should be shown.
+  ///
+  /// This variable is a boolean that controls the visibility of the field's
+  /// details in the UI. When set to `true`, the additional details of the
+  /// field are displayed to the user. Conversely, when `false`, such details
+  /// are hidden, providing a cleaner and more succinct view.
   bool show = false;
 
   @override
@@ -298,18 +389,32 @@ class __FieldTileState extends State<_FieldTile> {
     );
   }
 
+  /// Handles the tap event on the copy icon.
+  ///
+  /// Toggles the `pressed` state to initiate the copy animation and copies the
+  /// current field value to the clipboard. After copying, it displays a snack bar
+  /// with a confirmation message.
   void handleTap() {
     setState(() {
       pressed = !pressed;
     });
   }
 
+  /// Toggles the `show` state to reveal or hide the password.
+  ///
+  /// This method changes the visibility of the password by toggling the
+  /// state of `show`. When `show` is set to true, the password is shown
+  /// in plain text. When `show` is set to false, the password is obscured.
   void showPassword() {
     setState(() {
       show = !show;
     });
   }
 
+  /// Triggers the copy animation and copies the current field value to the clipboard.
+  ///
+  /// This method sets the clipboard data with the current field value
+  /// and displays a snack bar to confirm that the text has been copied.
   void copy() {
     Clipboard.setData(ClipboardData(text: widget.field.value));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -325,16 +430,52 @@ class __FieldTileState extends State<_FieldTile> {
   }
 }
 
+/// Represents an actionable tile within the UI.
+///
+/// This widget is a stateful tile that can perform an action when tapped.
+/// It is used to represent an interactive element with a label that triggers
+/// an event handler when the user interacts with it.
+///
+/// The [_ActionTile] takes a [label] which is displayed on the tile and an [onTap]
+/// callback which is called when the tile is pressed.
 class _ActionTile extends StatefulWidget {
+  /// Creates an instance of [_ActionTile].
+  ///
+  /// This constructor requires a [label] to display on the tile. Optionally,
+  /// an [onTap] callback can be provided that will be called when the tile is
+  /// pressed. If [onTap] is not provided, the tile will not perform any action
+  /// when tapped.
   const _ActionTile({required this.label, this.onTap});
 
+  /// The text label for the action tile.
+  ///
+  /// This is the text that will be displayed on the tile, indicating
+  /// the action that will be performed when the tile is tapped. It is
+  /// a required parameter and must not be null.
   final String label;
+
+  /// Called when the tile is tapped.
+  ///
+  /// This callback is invoked when the user taps on the tile.
+  /// If null, then the tile will not react to tap gestures.
+  /// Otherwise, it specifies the action to take when the tile is tapped.
   final void Function()? onTap;
 
   @override
   State<StatefulWidget> createState() => __ActionTileState();
 }
 
+/// The `__ActionTileState` class is responsible for creating the visual representation
+/// of an [_ActionTile] widget.
+///
+/// This state object holds the logic and internal state for a [_ActionTile]. It manages
+/// the widget's appearance and interactions, such as tap handling. When the [_ActionTile]
+/// is tapped, this state class invokes the provided [onTap] callback, if any, and updates
+/// the UI accordingly.
+///
+/// The UI for the [_ActionTile] consists of a container with a bottom border and padding,
+/// which contains the text label provided to the [_ActionTile]. The text styling and
+/// color are determined by the current theme.
 class __ActionTileState extends State<_ActionTile> {
   @override
   Widget build(BuildContext context) {

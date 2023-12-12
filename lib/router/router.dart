@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:password_generator/page/detail.dart';
-import 'package:password_generator/page/form.dart';
+import 'package:password_generator/page/form/form.dart';
 import 'package:password_generator/page/form/component/insert_field.dart';
 import 'package:password_generator/page/form/component/insert_segment.dart';
 import 'package:password_generator/page/list.dart';
