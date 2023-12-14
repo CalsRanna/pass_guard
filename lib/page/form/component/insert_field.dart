@@ -78,6 +78,7 @@ class _InsertFieldPageState extends State<InsertFieldPage> {
                   ),
                 ),
                 FormItem(
+                  bordered: false,
                   label: '类型',
                   child: Input(
                     initialValue: type,
@@ -96,6 +97,15 @@ class _InsertFieldPageState extends State<InsertFieldPage> {
     );
   }
 
+  /// Pops the current route off the [GoRouter] stack.
+  ///
+  /// This method is used to dismiss the current screen and return to the
+  /// previous one. It is typically called in response to a user's action,
+  /// such as pressing a 'Cancel' button.
+  void handlePop() {
+    GoRouter.of(context).pop();
+  }
+
   /// Submits the form field data.
   ///
   /// This function creates a [Field] instance, sets its [label] and [type]
@@ -107,14 +117,5 @@ class _InsertFieldPageState extends State<InsertFieldPage> {
     field.label = label;
     field.type = type;
     GoRouter.of(context).pop(field);
-  }
-
-  /// Pops the current route off the [GoRouter] stack.
-  ///
-  /// This method is used to dismiss the current screen and return to the
-  /// previous one. It is typically called in response to a user's action,
-  /// such as pressing a 'Cancel' button.
-  void handlePop() {
-    GoRouter.of(context).pop();
   }
 }

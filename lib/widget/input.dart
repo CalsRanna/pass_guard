@@ -25,7 +25,7 @@ class _InputState extends State<Input> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final outlineVariant = colorScheme.outlineVariant;
+    final surfaceVariant = colorScheme.surfaceVariant;
     final textTheme = theme.textTheme;
     final bodySmall = textTheme.bodySmall;
     final bodyMedium = textTheme.bodyMedium;
@@ -35,7 +35,7 @@ class _InputState extends State<Input> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Text(
             placeholder,
-            style: bodySmall?.copyWith(color: outlineVariant),
+            style: bodySmall?.copyWith(color: surfaceVariant),
           ),
         ),
         TextFormField(

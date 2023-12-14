@@ -51,6 +51,7 @@ class _InsertSegmentPageState extends State<InsertSegmentPage> {
         children: [
           FormGroup(
             child: FormItem(
+              bordered: false,
               label: '名称',
               child: Input(
                 initialValue: name,
@@ -67,15 +68,6 @@ class _InsertSegmentPageState extends State<InsertSegmentPage> {
     );
   }
 
-  /// Submits the segment with the current name.
-  ///
-  /// This method is called when the '完成' button is pressed.
-  /// If a name has been entered, it uses [GoRouter] to pop the current
-  /// route off the stack and passes the segment name back to the previous screen.
-  void handleSubmit() {
-    GoRouter.of(context).pop(name);
-  }
-
   /// Pops the current route off the stack using [GoRouter].
   ///
   /// This method is called when the '取消' button is pressed. It is used
@@ -83,5 +75,14 @@ class _InsertSegmentPageState extends State<InsertSegmentPage> {
   /// without passing any data back.
   void handlePop() {
     GoRouter.of(context).pop();
+  }
+
+  /// Submits the segment with the current name.
+  ///
+  /// This method is called when the '完成' button is pressed.
+  /// If a name has been entered, it uses [GoRouter] to pop the current
+  /// route off the stack and passes the segment name back to the previous screen.
+  void handleSubmit() {
+    GoRouter.of(context).pop(name);
   }
 }

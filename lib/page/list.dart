@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:password_generator/page/form/form.dart';
 import 'package:password_generator/page/setting.dart';
@@ -7,7 +8,6 @@ import 'package:password_generator/router/router.dart';
 import 'package:password_generator/schema/guard.dart';
 import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/schema/migration.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A StatefulWidget that renders a list of passwords.
 ///
@@ -23,52 +23,17 @@ class PasswordList extends StatefulWidget {
 }
 
 class _PasswordListState extends State<PasswordList> {
-  late TextEditingController controller;
   FocusNode focusNode = FocusNode();
   bool showTextField = false;
 
   @override
-  void initState() {
-    controller = TextEditingController()
-      ..addListener(() {
-        filterList(controller.text);
-      });
-    super.initState();
-    final binding = WidgetsBinding.instance;
-    binding.addPostFrameCallback((timeStamp) async {
-      final migrated = await checkMigration();
-      if (!migrated && mounted) {
-        const MigrationRoute().push(context);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  /// Checks if the migration from 'floor' to 'isar' has been completed.
-  ///
-  /// It queries the 'migrations' collection in the Isar database to check if the
-  /// migration named 'floor_to_isar' has been counted. If the count is greater
-  /// than zero, it means the migration has already been done.
-  ///
-  /// Returns a [Future<bool>] that completes with `true` if the migration is done,
-  /// otherwise `false`.
-  Future<bool> checkMigration() async {
-    final count =
-        await isar.migrations.filter().nameEqualTo('floor_to_isar').count();
-    return count > 0;
-  }
-
-  @override
   Widget build(BuildContext context) {
     List<Widget>? actions = [
-      IconButton(
-        icon: const Icon(Icons.search_outlined),
-        onPressed: triggerTextField,
+      Consumer(
+        builder: (_, ref, child) => IconButton(
+          icon: const Icon(Icons.search_outlined),
+          onPressed: () => triggerTextField(ref),
+        ),
       ),
       IconButton(
         icon: const Icon(Icons.settings_outlined),
@@ -79,18 +44,29 @@ class _PasswordListState extends State<PasswordList> {
     Widget? title;
     if (showTextField) {
       actions = [
-        IconButton(
-          onPressed: triggerTextField,
-          icon: const Icon(Icons.close),
+        Consumer(
+          builder: (_, ref, child) => IconButton(
+            onPressed: () => triggerTextField(ref),
+            icon: const Icon(Icons.close),
+          ),
         )
       ];
-      title = TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          hintText: '搜索',
+      title = Consumer(
+        builder: (_, ref, child) => TextField(
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            hintText: '搜索',
+          ),
+          focusNode: focusNode,
+          onSubmitted: (value) => filterGuards(ref, value),
         ),
-        focusNode: focusNode,
+      );
+    }
+    Widget? floatingActionButton;
+    if (!showTextField) {
+      floatingActionButton = FloatingActionButton(
+        onPressed: createPassword,
+        child: const Icon(Icons.add_outlined),
       );
     }
     return Scaffold(
@@ -114,29 +90,41 @@ class _PasswordListState extends State<PasswordList> {
           return a;
         },
       ),
-      floatingActionButton: !showTextField
-          ? FloatingActionButton(
-              onPressed: () => handleNavigated(context, 'create'),
-              child: const Icon(Icons.add_outlined),
-            )
-          : null,
+      floatingActionButton: floatingActionButton,
     );
   }
 
-  void filterList(String? text) async {}
+  /// Checks if the migration from 'floor' to 'isar' has been completed.
+  ///
+  /// It queries the 'migrations' collection in the Isar database to check if the
+  /// migration named 'floor_to_isar' has been counted. If the count is greater
+  /// than zero, it means the migration has already been done.
+  ///
+  /// Returns a [Future<bool>] that completes with `true` if the migration is done,
+  /// otherwise `false`.
+  Future<bool> checkMigration() async {
+    final count =
+        await isar.migrations.filter().nameEqualTo('floor_to_isar').count();
+    return count > 0;
+  }
 
-  void triggerTextField() {
-    if (!showTextField) {
-      focusNode.requestFocus();
-      setState(() {
-        showTextField = true;
-      });
-    } else {
-      controller.text = '';
-      setState(() {
-        showTextField = false;
-      });
-    }
+  void createPassword() {
+    const CreateGuardRoute().push(context);
+  }
+
+  /// Filters the list of guards based on the given [value].
+  ///
+  /// If [value] is empty, it triggers a refresh of the guards list.
+  /// Otherwise, it performs a search query in the Isar database for guards
+  /// with titles that contain the [value], and updates the state with the results.
+  ///
+  /// [ref] is the WidgetRef from the Riverpod context.
+  /// [value] is the search term used to filter the guards list.
+  ///
+  /// Throws an [IsarError] if the database query fails.
+  void filterGuards(WidgetRef ref, String value) {
+    final notifier = ref.read(guardListNotifierProvider.notifier);
+    notifier.filterGuards(value);
   }
 
   void handleNavigated(BuildContext context, String route) {
@@ -154,6 +142,18 @@ class _PasswordListState extends State<PasswordList> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((timeStamp) async {
+      final migrated = await checkMigration();
+      if (!migrated && mounted) {
+        const MigrationRoute().push(context);
+      }
+    });
+  }
+
   /// Navigates to the detail page for a given guard.
   ///
   /// Pushes the [GuardDetailRoute] with the specified [id] onto the navigation
@@ -163,13 +163,28 @@ class _PasswordListState extends State<PasswordList> {
   void showDetail(int id) {
     GuardDetailRoute(id).push(context);
   }
+
+  void triggerTextField(WidgetRef ref) {
+    if (!showTextField) {
+      focusNode.requestFocus();
+      setState(() {
+        showTextField = true;
+      });
+    } else {
+      setState(() {
+        showTextField = false;
+      });
+      final notifier = ref.read(guardListNotifierProvider.notifier);
+      notifier.filterGuards('');
+    }
+  }
 }
 
 class _GuardListTile extends StatefulWidget {
-  const _GuardListTile({required this.guard, this.onTap});
-
   final Guard guard;
+
   final void Function()? onTap;
+  const _GuardListTile({required this.guard, this.onTap});
 
   @override
   State<StatefulWidget> createState() => __GuardListTileState();
@@ -180,8 +195,8 @@ class __GuardListTileState extends State<_GuardListTile> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final outlineVariant = colorScheme.outlineVariant;
-    final borderSide = BorderSide(color: outlineVariant);
+    final surfaceVariant = colorScheme.surfaceVariant;
+    final borderSide = BorderSide(color: surfaceVariant);
     final textTheme = theme.textTheme;
     final bodyMedium = textTheme.bodyMedium;
     final bodySmall = textTheme.bodySmall;

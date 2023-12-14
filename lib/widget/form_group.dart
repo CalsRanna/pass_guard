@@ -19,13 +19,6 @@ class FormGroup extends StatelessWidget {
   /// The provided [child] widget is wrapped with a styled [Container] that has
   /// borders on the top and bottom. The appearance is consistent with the current
   /// theme's color scheme.
-  ///
-  /// ```dart
-  /// FormGroup(
-  ///   title: 'Personal Information',
-  ///   child: MyCustomFormField(),
-  /// )
-  ///
   const FormGroup({super.key, this.title, required this.child});
 
   /// The optional title for the form group.

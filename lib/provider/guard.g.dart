@@ -220,7 +220,7 @@ class _FindGuardProviderElement extends AutoDisposeFutureProviderElement<Guard?>
   int get id => (origin as FindGuardProvider).id;
 }
 
-String _$guardListNotifierHash() => r'3be0b3ac43e9ed70eb68473d4541c52ae9b8ec59';
+String _$guardListNotifierHash() => r'd87b9de27c57dae697aad83bd97c745219fd485a';
 
 /// Manages a list of [Guard] objects by interfacing with the Isar database.
 ///
