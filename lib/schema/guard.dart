@@ -2,6 +2,66 @@ import 'package:isar/isar.dart';
 
 part 'guard.g.dart';
 
+/// Represents a single field within a segment.
+///
+/// Each field has a [key], [value], [type], and [label], which can be
+/// used to store and represent various types of data within a segment.
+///
+/// The [key] is a unique identifier for the field.
+/// The [value] contains the data associated with the field.
+/// The [type] describes the kind of data the field holds (e.g., 'text', 'number').
+/// The [label] provides a human-readable label for the field, which can be used
+/// in user interfaces.
+@embedded
+@Name('fields')
+class Field {
+  String key = '';
+  String value = '';
+  String type = '';
+  String label = '';
+
+  /// Creates a [Field] instance with default values.
+  ///
+  /// The [key], [value], [type], and [label] are initialized as empty strings.
+  Field();
+
+  /// Creates a [Field] instance from a JSON map.
+  ///
+  /// This constructor parses the provided JSON map and assigns the values to the
+  /// corresponding properties of the [Field] instance. The JSON map must contain
+  /// the keys 'key', 'value', 'type', and 'label'.
+  ///
+  /// Parameters:
+  ///   - `json`: The JSON map containing keys corresponding to field properties.
+  ///
+  /// Returns:
+  ///   A new [Field] instance with properties set from the JSON map.
+  factory Field.fromJson(Map<String, dynamic> json) {
+    final field = Field();
+    field.key = json['key'];
+    field.value = json['value'];
+    field.type = json['type'];
+    field.label = json['label'];
+    return field;
+  }
+
+  /// Converts a [Field] instance into a JSON map.
+  ///
+  /// This method serializes the [Field] instance into a JSON map containing its properties.
+  /// Each property of the [Field] instance is represented as a key-value pair in the map.
+  ///
+  /// Returns:
+  ///   A map with string keys and dynamic values representing the JSON object.
+  Map<String, dynamic> toJson() {
+    return {
+      'key': key,
+      'value': value,
+      'type': type,
+      'label': label,
+    };
+  }
+}
+
 /// The `Guard` class represents a security entity with a unique identifier and a title.
 ///
 /// This class holds a collection of `Segment` objects, each defining a specific
@@ -56,6 +116,30 @@ class Guard {
     guard.createdAt = json['created_at'] ?? DateTime.now();
     guard.updatedAt = json['updated_at'] ?? DateTime.now();
     return guard;
+  }
+
+  String? get password {
+    for (var segment in segments) {
+      final fields = segment.fields;
+      for (var field in fields) {
+        if (field.type == 'password') {
+          return field.value;
+        }
+      }
+    }
+    return null;
+  }
+
+  String get subtitle {
+    for (final segment in segments) {
+      final fields = segment.fields;
+      for (final field in fields) {
+        if (field.value.isNotEmpty && field.type != 'password') {
+          return field.value;
+        }
+      }
+    }
+    return '';
   }
 
   /// Converts a `Guard` instance into a JSON map.
@@ -133,66 +217,6 @@ class Segment {
     return {
       'title': title,
       'fields': fields.map((field) => field.toJson()).toList(),
-    };
-  }
-}
-
-/// Represents a single field within a segment.
-///
-/// Each field has a [key], [value], [type], and [label], which can be
-/// used to store and represent various types of data within a segment.
-///
-/// The [key] is a unique identifier for the field.
-/// The [value] contains the data associated with the field.
-/// The [type] describes the kind of data the field holds (e.g., 'text', 'number').
-/// The [label] provides a human-readable label for the field, which can be used
-/// in user interfaces.
-@embedded
-@Name('fields')
-class Field {
-  String key = '';
-  String value = '';
-  String type = '';
-  String label = '';
-
-  /// Creates a [Field] instance with default values.
-  ///
-  /// The [key], [value], [type], and [label] are initialized as empty strings.
-  Field();
-
-  /// Creates a [Field] instance from a JSON map.
-  ///
-  /// This constructor parses the provided JSON map and assigns the values to the
-  /// corresponding properties of the [Field] instance. The JSON map must contain
-  /// the keys 'key', 'value', 'type', and 'label'.
-  ///
-  /// Parameters:
-  ///   - `json`: The JSON map containing keys corresponding to field properties.
-  ///
-  /// Returns:
-  ///   A new [Field] instance with properties set from the JSON map.
-  factory Field.fromJson(Map<String, dynamic> json) {
-    final field = Field();
-    field.key = json['key'];
-    field.value = json['value'];
-    field.type = json['type'];
-    field.label = json['label'];
-    return field;
-  }
-
-  /// Converts a [Field] instance into a JSON map.
-  ///
-  /// This method serializes the [Field] instance into a JSON map containing its properties.
-  /// Each property of the [Field] instance is represented as a key-value pair in the map.
-  ///
-  /// Returns:
-  ///   A map with string keys and dynamic values representing the JSON object.
-  Map<String, dynamic> toJson() {
-    return {
-      'key': key,
-      'value': value,
-      'type': type,
-      'label': label,
     };
   }
 }

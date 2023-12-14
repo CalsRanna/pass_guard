@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 import 'package:password_generator/schema/guard.dart';
 import 'package:password_generator/schema/guard_template.dart';
 import 'package:password_generator/schema/migration.dart';
+import 'package:password_generator/schema/setting.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// A global instance of the Isar database.
@@ -23,7 +24,7 @@ class IsarInitializer {
   /// This method performs the following initialization steps:
   /// 1. Obtains the application documents directory.
   /// 2. Opens the Isar database with predefined schemas for Migration,
-  ///    Guard, and GuardTemplate.
+  ///    Guard, GuardTemplate and Setting.
   /// 3. Seeds the GuardTemplate data if it does not already exist in the database.
   ///
   /// This method should be called at the start of the application to prepare
@@ -33,7 +34,7 @@ class IsarInitializer {
   static Future<void> ensureInitialized() async {
     final directory = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
-      [MigrationSchema, GuardSchema, GuardTemplateSchema],
+      [MigrationSchema, GuardSchema, GuardTemplateSchema, SettingSchema],
       directory: directory.path,
     );
     _seedGuardTemplates();

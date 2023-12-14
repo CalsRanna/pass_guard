@@ -19,17 +19,18 @@ class WebDAVUtil {
     required this.url,
     required this.username,
   }) {
-    final dio = WdDio();
-    dio.httpClientAdapter = IOHttpClientAdapter(
-      validateCertificate: (certificate, host, port) {
-        return true;
-      },
-    );
-    _client = Client(
-      uri: url,
-      c: dio,
-      auth: BasicAuth(user: username, pwd: password),
-    );
+    // final dio = WdDio();
+    // dio.httpClientAdapter = IOHttpClientAdapter(
+    //   validateCertificate: (certificate, host, port) {
+    //     return true;
+    //   },
+    // );
+    // _client = Client(
+    //   uri: url,
+    //   c: dio,
+    //   auth: BasicAuth(user: username, pwd: password),
+    // );
+    _client = newClient(url, user: username, password: password);
     _path = p.join(path, '.pass_guard', '.vault');
   }
 
@@ -38,8 +39,8 @@ class WebDAVUtil {
       await _client.readDir(_path);
     } catch (e) {
       if (e.runtimeType == DioException) {
-        final message = (e as DioException).message;
-        if (message == 'Not Found') {
+        final code = (e as DioException).response?.statusCode;
+        if (code! >= 400 && code < 500) {
           await _client.mkdirAll(_path);
         }
       }
@@ -49,22 +50,9 @@ class WebDAVUtil {
   Future<int?> getRemoteVersion() async {
     await _init();
     final files = await _client.readDir(_path);
-    try {
-      if (files.isNotEmpty) {
-        int version = 0;
-        for (var file in files) {
-          final localVersion = int.tryParse(file.name ?? '0') ?? 0;
-          if (localVersion > version) {
-            version = localVersion;
-          }
-        }
-        return version;
-      } else {
-        return null;
-      }
-    } catch (e) {
-      return null;
-    }
+    if (files.isEmpty) return 0;
+    files.sort((a, b) => int.parse(b.name!).compareTo(int.parse(a.name!)));
+    return int.parse(files.first.name ?? '0');
   }
 
   Future<void> writeFile(String text, int version) async {
@@ -81,6 +69,7 @@ class WebDAVUtil {
   Future<String> readFile(int version) async {
     await _init();
     final bytes = await _client.read(p.join(_path, '$version'));
+    print(bytes);
     final string = String.fromCharCodes(bytes);
     final patterns = string
         .replaceAll('[', '')

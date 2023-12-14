@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/router/router.dart';
 import 'package:password_generator/schema/guard.dart';
+import 'package:password_generator/util/password_generator.dart';
 
 /// A [StatelessWidget] that displays the detail of a specific password entry.
 ///
@@ -46,6 +47,7 @@ class PasswordDetail extends StatelessWidget {
           )
         ],
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
       ),
       body: Consumer(builder: (context, ref, child) {
         final guard = ref.watch(FindGuardProvider(id));
@@ -57,48 +59,8 @@ class PasswordDetail extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Text(value?.title ?? '', style: titleLarge),
                 ),
-                Container(
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(4),
-                      bottomRight: Radius.circular(4),
-                    ),
-                    color: Colors.orange,
-                  ),
-                  height: 4,
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    color: Colors.white,
-                  ),
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.key_off_outlined,
-                        color: Colors.orange,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '弱密码',
-                            style: bodySmall?.copyWith(color: Colors.orange),
-                          ),
-                          Text('此账户的密码不够安全', style: bodySmall)
-                        ],
-                      )
-                    ],
-                  ),
-                ),
+                _Indicator(guard: value),
+                _IndicatorVariant(guard: value),
                 for (final segment in value?.segments ?? <Segment>[])
                   _SegmentTile(segment: segment),
                 const SizedBox(height: 32),
@@ -336,6 +298,21 @@ class __FieldTileState extends State<_FieldTile> {
   /// It is used to update the tile's appearance in response to user interaction.
   bool pressed = false;
 
+  /// The height of the [_FieldTile] widget.
+  ///
+  /// This variable is a double that sets the height of the [_FieldTile] widget.
+  /// It's used to control the vertical size of the tile, making it adaptable to various
+  /// screen sizes and orientations.
+  double height = 52;
+
+  /// The [GlobalKey] for the [_FieldTile] widget.
+  ///
+  /// This key allows for direct control and manipulation of the widget's state
+  /// from other parts of the codebase. It provides a way to access the state of
+  /// the widget and can be used for triggering state updates, accessing context,
+  /// or querying the widget's details.
+  GlobalKey key = GlobalKey();
+
   /// Determines whether the details of the field should be shown.
   ///
   /// This variable is a boolean that controls the visibility of the field's
@@ -380,11 +357,18 @@ class __FieldTileState extends State<_FieldTile> {
                         ),
                         const SizedBox(height: 4),
                         Text(
+                          key: key,
                           widget.field.type == 'password' && !show
                               ? '••••••••••••••••'
-                              : widget.field.value,
+                              : widget.field.value.runes
+                                  .map((code) => String.fromCharCode(code))
+                                  .join('\u200B'),
                           style: bodySmall,
                         ),
+                        if (widget.field.type == 'password') ...[
+                          const SizedBox(height: 4),
+                          _Strength(password: widget.field.value)
+                        ]
                       ],
                     ),
                   ),
@@ -394,7 +378,7 @@ class __FieldTileState extends State<_FieldTile> {
                       onTap: showPassword,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        height: 36,
+                        height: height - 8 * 2,
                         child: Icon(
                           show
                               ? Icons.visibility_off_outlined
@@ -415,8 +399,8 @@ class __FieldTileState extends State<_FieldTile> {
                   alignment: Alignment.center,
                   duration: const Duration(milliseconds: 150),
                   width: pressed ? 72 : 0,
-                  height: 52,
-                  color: Colors.green[400],
+                  height: height,
+                  color: primary,
                   child: Text(
                     '复制',
                     maxLines: 1,
@@ -429,6 +413,20 @@ class __FieldTileState extends State<_FieldTile> {
         ),
       ),
     );
+  }
+
+  /// Calculates and updates the height of the widget.
+  ///
+  /// This method calculates the height based on the field type and current context size.
+  /// If the field type is 'password', additional height is added. The calculated height
+  /// is then set to the `height` state variable.
+  void calculateHeight() {
+    setState(() {
+      height = 8 * 2 + 16 + 4 + key.currentContext!.size!.height;
+      if (widget.field.type == 'password') {
+        height += 4 + 2 * 2 + 16;
+      }
+    });
   }
 
   /// Triggers the copy animation and copies the current field value to the clipboard.
@@ -460,15 +458,163 @@ class __FieldTileState extends State<_FieldTile> {
     });
   }
 
-  /// Toggles the `show` state to reveal or hide the password.
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      calculateHeight();
+    });
+  }
+
+  /// Toggles the visibility of the password.
   ///
-  /// This method changes the visibility of the password by toggling the
-  /// state of `show`. When `show` is set to true, the password is shown
-  /// in plain text. When `show` is set to false, the password is obscured.
-  void showPassword() {
+  /// When invoked, this method updates the `show` state to its opposite value, effectively
+  /// toggling the visibility of the password. After the state update, it recalculates
+  /// the height. If `show` is `true`, the password will be visible. If `show` is `false`,
+  /// the password will be hidden.
+  void showPassword() async {
     setState(() {
       show = !show;
     });
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      calculateHeight();
+    });
+  }
+}
+
+/// [_Indicator] is a StatelessWidget that displays an indicator for the password strength.
+///
+/// This widget takes a [Guard] object as input, which contains the password
+/// that the indicator will represent. The indicator then gives a visual representation
+/// of the strength of the password, allowing the user to see how secure their password is.
+///
+/// If no [Guard] object is provided, or the [Guard] does not contain a password,
+/// the widget will not display anything.
+class _Indicator extends StatelessWidget {
+  /// The [Guard] object associated with this [_Indicator] widget.
+  ///
+  /// This property holds the [Guard] object that contains the password
+  /// which the [_Indicator] widget represents. The [Guard] object provides
+  /// the necessary data for the indicator to give a visual representation
+  /// of the strength of the password. If no [Guard] object is provided,
+  /// or the [Guard] does not contain a password, the widget will not display anything.
+  final Guard? guard;
+
+  /// Creates an instance of [_Indicator].
+  ///
+  /// You can optionally pass a [Guard] object to associate it with this [_Indicator] widget.
+  /// If the [Guard] object contains a password, the [_Indicator] widget will display
+  /// a visual representation of the strength of the password.
+  ///
+  /// If no [Guard] object is provided, or the [Guard] does not contain a password,
+  /// the widget will not display anything.
+  ///
+  /// [guard] is a [Guard] object that contains the password for this widget.
+  const _Indicator({this.guard});
+
+  @override
+  Widget build(BuildContext context) {
+    String? password = guard?.password;
+    if (password == null) {
+      return const SizedBox();
+    }
+    int level = PasswordGenerator().calculateStrengthLevel(password);
+    if (level > 1 || password.isEmpty) {
+      return const SizedBox();
+    }
+    return Container(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(4),
+          bottomRight: Radius.circular(4),
+        ),
+        color: Colors.orange,
+      ),
+      height: 4,
+    );
+  }
+}
+
+/// The [_IndicatorVariant] widget displays a variant of an indicator for password strength.
+///
+/// This widget is a variation of the [_Indicator] widget and provides a visual representation
+/// of a password's strength using a [Guard] object. If the [Guard] object contains a password,
+/// the [_IndicatorVariant] widget will display a visual representation of the strength of the password.
+///
+/// If no [Guard] object is provided, or the [Guard] does not contain a password,
+/// the widget will not display anything.
+///
+/// [guard] is a [Guard] object that contains the password for this widget.
+class _IndicatorVariant extends StatelessWidget {
+  /// The [Guard] object associated with this [_IndicatorVariant] widget.
+  ///
+  /// This property holds the [Guard] object that represents the security context
+  /// for the [_IndicatorVariant] widget. The [Guard] object provides the necessary
+  /// data for the widget to give a visual representation of the password strength.
+  ///
+  /// If no [Guard] object is provided, or if the [Guard] does not contain a password,
+  /// the widget will not display anything.
+  ///
+  /// [guard] is a [Guard] object that holds the password and other security context
+  /// for this widget.
+  final Guard? guard;
+
+  /// Creates an instance of [_IndicatorVariant] widget.
+  ///
+  /// Takes in a [Guard] object which represents the security context
+  /// for the [_IndicatorVariant] widget. The [Guard] object provides
+  /// the necessary data for the widget to give a visual representation
+  /// of the password strength.
+  ///
+  /// [guard] is a [Guard] object that holds the password and other
+  /// security context for this widget.
+  const _IndicatorVariant({this.guard});
+
+  @override
+  Widget build(BuildContext context) {
+    String? password = guard?.password;
+    if (password == null) {
+      return const SizedBox();
+    }
+    int level = PasswordGenerator().calculateStrengthLevel(password);
+    if (level > 1 || password.isEmpty) {
+      return const SizedBox();
+    }
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final bodySmall = textTheme.bodySmall;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+      ),
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 16,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.key_off_outlined,
+            color: Colors.orange,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '弱密码',
+                style: bodySmall?.copyWith(color: Colors.orange),
+              ),
+              Text('此账户的密码不够安全', style: bodySmall)
+            ],
+          )
+        ],
+      ),
+    );
   }
 }
 
@@ -535,6 +681,46 @@ class _SegmentTile extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _Strength extends StatelessWidget {
+  final String? password;
+  const _Strength({this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Color> colors = [
+      Colors.red,
+      Colors.deepOrange,
+      Colors.orange,
+      Colors.lightGreen,
+      Colors.green,
+    ];
+    final List<String> levels = [
+      '很差',
+      '弱',
+      '一般',
+      '好',
+      '非常好',
+    ];
+    final level = PasswordGenerator().calculateStrengthLevel(password ?? '');
+
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final bodySmall = textTheme.bodySmall;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        color: colors[level],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      child: Text(
+        levels[level],
+        style: bodySmall?.copyWith(color: Colors.white),
+      ),
     );
   }
 }

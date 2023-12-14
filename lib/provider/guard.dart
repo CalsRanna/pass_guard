@@ -1,6 +1,9 @@
 import 'package:isar/isar.dart';
+import 'package:password_generator/provider/setting.dart';
 import 'package:password_generator/schema/guard.dart';
 import 'package:password_generator/schema/isar.dart';
+import 'package:password_generator/schema/setting.dart';
+import 'package:password_generator/util/synchronization.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'guard.g.dart';
@@ -84,5 +87,37 @@ class GuardListNotifier extends _$GuardListNotifier {
     });
     ref.invalidateSelf();
     await future;
+  }
+
+  Future<void> uploadGuards() async {
+    final guards = state.value;
+    if (guards == null) return;
+    final setting = await ref.read(settingNotifierProvider.future);
+    await Synchronization.sync(
+      setting: setting,
+      guards: guards,
+      direction: 'upload',
+    );
+    ref.invalidate(getRemoteVersionProvider);
+  }
+
+  Future<void> downloadGuards() async {
+    var setting = await ref.read(settingNotifierProvider.future);
+    final guards = await Synchronization.sync(
+      setting: setting,
+      guards: [],
+      direction: 'download',
+    );
+    if (guards == null) return;
+    state = AsyncData(guards);
+    await isar.writeTxn(() async {
+      await isar.guards.clear();
+      await isar.guards.putAll(guards);
+    });
+    final version = await ref.read(getRemoteVersionProvider.future);
+    setting.updatedAt = DateTime.fromMillisecondsSinceEpoch(version ?? 0);
+    await isar.writeTxn(() async {
+      await isar.settings.put(setting);
+    });
   }
 }

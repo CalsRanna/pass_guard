@@ -210,16 +210,27 @@ class _PasswordGeneratorPageState extends State<PasswordGeneratorPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (widget.plain)
-                          ElevatedButton(
-                            onPressed: handleCopy,
-                            child: const Text('复制'),
-                          )
-                        else
-                          ElevatedButton(
-                            onPressed: handleUse,
-                            child: const Text('使用'),
-                          )
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: widget.plain ? handleCopy : handleUse,
+                          child: Container(
+                            decoration: const ShapeDecoration(
+                              shape: StadiumBorder(
+                                side: BorderSide(color: Colors.white),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 2,
+                              ),
+                              child: Text(
+                                widget.plain ? '复制' : '使用',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

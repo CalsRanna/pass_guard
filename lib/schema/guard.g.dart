@@ -22,19 +22,29 @@ const GuardSchema = CollectionSchema(
       name: r'created_at',
       type: IsarType.dateTime,
     ),
-    r'segments': PropertySchema(
+    r'password': PropertySchema(
       id: 1,
+      name: r'password',
+      type: IsarType.string,
+    ),
+    r'segments': PropertySchema(
+      id: 2,
       name: r'segments',
       type: IsarType.objectList,
       target: r'segments',
     ),
+    r'subtitle': PropertySchema(
+      id: 3,
+      name: r'subtitle',
+      type: IsarType.string,
+    ),
     r'title': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'title',
       type: IsarType.string,
     ),
     r'updated_at': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'updated_at',
       type: IsarType.dateTime,
     )
@@ -59,6 +69,12 @@ int _guardEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.password;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.segments.length * 3;
   {
     final offsets = allOffsets[Segment]!;
@@ -67,6 +83,7 @@ int _guardEstimateSize(
       bytesCount += SegmentSchema.estimateSize(value, offsets, allOffsets);
     }
   }
+  bytesCount += 3 + object.subtitle.length * 3;
   bytesCount += 3 + object.title.length * 3;
   return bytesCount;
 }
@@ -78,14 +95,16 @@ void _guardSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
+  writer.writeString(offsets[1], object.password);
   writer.writeObjectList<Segment>(
-    offsets[1],
+    offsets[2],
     allOffsets,
     SegmentSchema.serialize,
     object.segments,
   );
-  writer.writeString(offsets[2], object.title);
-  writer.writeDateTime(offsets[3], object.updatedAt);
+  writer.writeString(offsets[3], object.subtitle);
+  writer.writeString(offsets[4], object.title);
+  writer.writeDateTime(offsets[5], object.updatedAt);
 }
 
 Guard _guardDeserialize(
@@ -98,14 +117,14 @@ Guard _guardDeserialize(
   object.createdAt = reader.readDateTime(offsets[0]);
   object.id = id;
   object.segments = reader.readObjectList<Segment>(
-        offsets[1],
+        offsets[2],
         SegmentSchema.deserialize,
         allOffsets,
         Segment(),
       ) ??
       [];
-  object.title = reader.readString(offsets[2]);
-  object.updatedAt = reader.readDateTime(offsets[3]);
+  object.title = reader.readString(offsets[4]);
+  object.updatedAt = reader.readDateTime(offsets[5]);
   return object;
 }
 
@@ -119,6 +138,8 @@ P _guardDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
       return (reader.readObjectList<Segment>(
             offset,
             SegmentSchema.deserialize,
@@ -126,9 +147,11 @@ P _guardDeserializeProp<P>(
             Segment(),
           ) ??
           []) as P;
-    case 2:
-      return (reader.readString(offset)) as P;
     case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
       return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -328,6 +351,152 @@ extension GuardQueryFilter on QueryBuilder<Guard, Guard, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'password',
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'password',
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'password',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'password',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'password',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'password',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> passwordIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'password',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Guard, Guard, QAfterFilterCondition> segmentsLengthEqualTo(
       int length) {
     return QueryBuilder.apply(this, (query) {
@@ -409,6 +578,136 @@ extension GuardQueryFilter on QueryBuilder<Guard, Guard, QFilterCondition> {
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subtitle',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'subtitle',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'subtitle',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtitle',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterFilterCondition> subtitleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'subtitle',
+        value: '',
+      ));
     });
   }
 
@@ -618,6 +917,30 @@ extension GuardQuerySortBy on QueryBuilder<Guard, Guard, QSortBy> {
     });
   }
 
+  QueryBuilder<Guard, Guard, QAfterSortBy> sortByPassword() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'password', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> sortByPasswordDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'password', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> sortBySubtitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> sortBySubtitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtitle', Sort.desc);
+    });
+  }
+
   QueryBuilder<Guard, Guard, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -668,6 +991,30 @@ extension GuardQuerySortThenBy on QueryBuilder<Guard, Guard, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Guard, Guard, QAfterSortBy> thenByPassword() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'password', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> thenByPasswordDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'password', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> thenBySubtitle() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtitle', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QAfterSortBy> thenBySubtitleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'subtitle', Sort.desc);
+    });
+  }
+
   QueryBuilder<Guard, Guard, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -700,6 +1047,20 @@ extension GuardQueryWhereDistinct on QueryBuilder<Guard, Guard, QDistinct> {
     });
   }
 
+  QueryBuilder<Guard, Guard, QDistinct> distinctByPassword(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'password', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Guard, Guard, QDistinct> distinctBySubtitle(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'subtitle', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Guard, Guard, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -727,9 +1088,21 @@ extension GuardQueryProperty on QueryBuilder<Guard, Guard, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Guard, String?, QQueryOperations> passwordProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'password');
+    });
+  }
+
   QueryBuilder<Guard, List<Segment>, QQueryOperations> segmentsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'segments');
+    });
+  }
+
+  QueryBuilder<Guard, String, QQueryOperations> subtitleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'subtitle');
     });
   }
 
@@ -749,331 +1122,6 @@ extension GuardQueryProperty on QueryBuilder<Guard, Guard, QQueryProperty> {
 // **************************************************************************
 // IsarEmbeddedGenerator
 // **************************************************************************
-
-// coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
-
-const SegmentSchema = Schema(
-  name: r'segments',
-  id: 6710591271227162844,
-  properties: {
-    r'fields': PropertySchema(
-      id: 0,
-      name: r'fields',
-      type: IsarType.objectList,
-      target: r'fields',
-    ),
-    r'title': PropertySchema(
-      id: 1,
-      name: r'title',
-      type: IsarType.string,
-    )
-  },
-  estimateSize: _segmentEstimateSize,
-  serialize: _segmentSerialize,
-  deserialize: _segmentDeserialize,
-  deserializeProp: _segmentDeserializeProp,
-);
-
-int _segmentEstimateSize(
-  Segment object,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  var bytesCount = offsets.last;
-  bytesCount += 3 + object.fields.length * 3;
-  {
-    final offsets = allOffsets[Field]!;
-    for (var i = 0; i < object.fields.length; i++) {
-      final value = object.fields[i];
-      bytesCount += FieldSchema.estimateSize(value, offsets, allOffsets);
-    }
-  }
-  bytesCount += 3 + object.title.length * 3;
-  return bytesCount;
-}
-
-void _segmentSerialize(
-  Segment object,
-  IsarWriter writer,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  writer.writeObjectList<Field>(
-    offsets[0],
-    allOffsets,
-    FieldSchema.serialize,
-    object.fields,
-  );
-  writer.writeString(offsets[1], object.title);
-}
-
-Segment _segmentDeserialize(
-  Id id,
-  IsarReader reader,
-  List<int> offsets,
-  Map<Type, List<int>> allOffsets,
-) {
-  final object = Segment();
-  object.fields = reader.readObjectList<Field>(
-        offsets[0],
-        FieldSchema.deserialize,
-        allOffsets,
-        Field(),
-      ) ??
-      [];
-  object.title = reader.readString(offsets[1]);
-  return object;
-}
-
-P _segmentDeserializeProp<P>(
-  IsarReader reader,
-  int propertyId,
-  int offset,
-  Map<Type, List<int>> allOffsets,
-) {
-  switch (propertyId) {
-    case 0:
-      return (reader.readObjectList<Field>(
-            offset,
-            FieldSchema.deserialize,
-            allOffsets,
-            Field(),
-          ) ??
-          []) as P;
-    case 1:
-      return (reader.readString(offset)) as P;
-    default:
-      throw IsarError('Unknown property with id $propertyId');
-  }
-}
-
-extension SegmentQueryFilter
-    on QueryBuilder<Segment, Segment, QFilterCondition> {
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthEqualTo(
-      int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        length,
-        true,
-        length,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        0,
-        true,
-        0,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        0,
-        false,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        0,
-        true,
-        length,
-        include,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        length,
-        include,
-        999999,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'fields',
-        lower,
-        includeLower,
-        upper,
-        includeUpper,
-      );
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'title',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'title',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'title',
-        value: '',
-      ));
-    });
-  }
-}
-
-extension SegmentQueryObject
-    on QueryBuilder<Segment, Segment, QFilterCondition> {
-  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsElement(
-      FilterQuery<Field> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'fields');
-    });
-  }
-}
 
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
@@ -1683,3 +1731,328 @@ extension FieldQueryFilter on QueryBuilder<Field, Field, QFilterCondition> {
 }
 
 extension FieldQueryObject on QueryBuilder<Field, Field, QFilterCondition> {}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const SegmentSchema = Schema(
+  name: r'segments',
+  id: 6710591271227162844,
+  properties: {
+    r'fields': PropertySchema(
+      id: 0,
+      name: r'fields',
+      type: IsarType.objectList,
+      target: r'fields',
+    ),
+    r'title': PropertySchema(
+      id: 1,
+      name: r'title',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _segmentEstimateSize,
+  serialize: _segmentSerialize,
+  deserialize: _segmentDeserialize,
+  deserializeProp: _segmentDeserializeProp,
+);
+
+int _segmentEstimateSize(
+  Segment object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.fields.length * 3;
+  {
+    final offsets = allOffsets[Field]!;
+    for (var i = 0; i < object.fields.length; i++) {
+      final value = object.fields[i];
+      bytesCount += FieldSchema.estimateSize(value, offsets, allOffsets);
+    }
+  }
+  bytesCount += 3 + object.title.length * 3;
+  return bytesCount;
+}
+
+void _segmentSerialize(
+  Segment object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeObjectList<Field>(
+    offsets[0],
+    allOffsets,
+    FieldSchema.serialize,
+    object.fields,
+  );
+  writer.writeString(offsets[1], object.title);
+}
+
+Segment _segmentDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Segment();
+  object.fields = reader.readObjectList<Field>(
+        offsets[0],
+        FieldSchema.deserialize,
+        allOffsets,
+        Field(),
+      ) ??
+      [];
+  object.title = reader.readString(offsets[1]);
+  return object;
+}
+
+P _segmentDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readObjectList<Field>(
+            offset,
+            FieldSchema.deserialize,
+            allOffsets,
+            Field(),
+          ) ??
+          []) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension SegmentQueryFilter
+    on QueryBuilder<Segment, Segment, QFilterCondition> {
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'fields',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'title',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'title',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'title',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> titleIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'title',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension SegmentQueryObject
+    on QueryBuilder<Segment, Segment, QFilterCondition> {
+  QueryBuilder<Segment, Segment, QAfterFilterCondition> fieldsElement(
+      FilterQuery<Field> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'fields');
+    });
+  }
+}

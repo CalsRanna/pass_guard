@@ -2,168 +2,117 @@ import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
 import 'package:encrypt/encrypt.dart';
-import 'package:password_generator/entity/password.dart';
+import 'package:password_generator/schema/guard.dart';
+import 'package:password_generator/schema/setting.dart';
 import 'package:password_generator/util/web_dav.dart';
 
 class Synchronization {
-  static Future<List<Password>?> sync(
-    WebDAVUtil util,
-    List<Password>? guards,
-    int localVersion,
+  static Future<List<Guard>?> sync({
+    required Setting setting,
+    required List<Guard> guards,
     int? remoteVersion,
-    String credential,
-    int strategy,
     String? direction,
-  ) async {
-    try {
-      var port = ReceivePort();
-      var isolate = await Isolate.spawn(_sync, port.sendPort);
-      var sendPort = await port.first as SendPort;
-      var reciver = ReceivePort();
-      sendPort.send({
-        'utilConfig': {
-          'url': util.url,
-          'path': util.path,
-          'username': util.username,
-          'password': util.password,
-        },
-        'guards': const JsonCodec().encode(guards),
-        'localVersion': localVersion,
-        'remoteVersion': remoteVersion,
-        'port': reciver.sendPort,
-        'credential': credential,
-        'strategy': strategy,
-        'direction': direction,
-      });
-      List<Password>? result;
-      await reciver.forEach((message) {
-        final text = message as String;
-        if (text == 'SYNC_SUCCEED' || text == 'SYNC_FAILED') {
-          reciver.close();
-          isolate.kill();
-        } else if (text.startsWith('SYNC_ERROR:')) {
-          reciver.close();
-          throw Exception([text.replaceAll('SYNC_ERROR:', '')]);
-        } else {
-          List json = const JsonCodec().decode(text);
-          result = [];
-          for (var element in json) {
-            result!.add(Password(
-              comment: element['comment'],
-              id: element['id'],
-              name: element['name'],
-              username: element['username'],
-              password: element['password'],
-            ));
-          }
-        }
-      });
-      return result;
-    } catch (e) {
-      rethrow;
-    }
+  }) async {
+    final sender = ReceivePort();
+    final receiver = ReceivePort();
+    final isolate = await Isolate.spawn(_sync, sender.sendPort);
+    (await sender.first as SendPort).send(
+      [setting, guards, remoteVersion, direction, receiver.sendPort],
+    );
+    List<Guard>? result;
+    await receiver.forEach((message) {
+      if (message is Guard) {
+        result!.add(message);
+      } else {
+        isolate.kill();
+      }
+    });
+    return result;
   }
 
-  static Future<void> _sync(SendPort message) async {
-    var receivePort = ReceivePort();
-    message.send(receivePort.sendPort);
-    var args = await receivePort.first as Map<String, dynamic>;
-    final utilConfig = args['utilConfig'] as Map<String, String>;
-    final localVersion = args['localVersion'] as int;
-    final remoteVersion = args['remoteVersion'] as int?;
-    final credential = args['credential'] as String;
-    final strategy = args['strategy'] as int;
-    final direction = args['direction'] as String?;
-
-    final util = WebDAVUtil(
-      password: utilConfig['password']!,
-      path: utilConfig['path']!,
-      url: utilConfig['url']!,
-      username: utilConfig['username']!,
-    );
-    final hash = md5.convert(utf8.encode(credential));
-    final key = Key.fromUtf8(hash.toString());
-    final iv = IV.fromLength(16);
-    final encrypter = Encrypter(AES(key));
-    const codec = JsonCodec();
-    try {
-      if (strategy == 0 &&
-              remoteVersion != null &&
-              remoteVersion >= localVersion ||
-          strategy == 1 && direction != null && direction == 'download') {
-        final text = await util.readFile(remoteVersion!);
-        List json = codec.decode(text);
-        List<Password> guards = [];
-        for (var element in json) {
-          guards.add(Password(
-            comment: element['comment'],
-            id: element['id'],
-            name: element['name'],
-            username: element['username'],
-            password: encrypter.decrypt(
-              Encrypted.fromBase64(element['password']),
-              iv: iv,
-            ),
-          ));
+  static Future<void> _sync(SendPort sender) async {
+    final receiver = ReceivePort();
+    sender.send(receiver.sendPort);
+    receiver.listen((message) async {
+      final setting = message[0] as Setting;
+      final guards = message[1] as List<Guard>;
+      final remoteVersion = message[2] as int?;
+      final direction = message[3] as String?;
+      final sender = message[4] as SendPort;
+      try {
+        final client = WebDAVUtil(
+          password: setting.webDavPassword,
+          path: '/',
+          url: setting.webDavUrl,
+          username: setting.webDavUsername,
+        );
+        final hash = md5.convert(utf8.encode(setting.mainPassword));
+        final key = Key.fromUtf8(hash.toString());
+        final iv = IV.fromLength(16);
+        final encryption = Encrypter(AES(key));
+        const codec = JsonCodec();
+        if (direction == 'download') {
+          print('1');
+          final content = await client.readFile(remoteVersion!);
+          print('2');
+          List json = codec.decode(content);
+          List<Guard> remoteGuards = [];
+          for (var element in json) {
+            element['created_at'] = DateTime.fromMillisecondsSinceEpoch(
+              element['created_at'],
+            );
+            element['updated_at'] = DateTime.fromMillisecondsSinceEpoch(
+              element['updated_at'],
+            );
+            var guard = Guard.fromJson(element);
+            final segments = guard.segments;
+            for (var segment in segments) {
+              final fields = segment.fields;
+              for (var field in fields) {
+                if (field.type == 'password') {
+                  field.value = encryption.decrypt(
+                    Encrypted.fromBase64(field.value),
+                    iv: iv,
+                  );
+                }
+              }
+            }
+            remoteGuards.add(guard);
+            sender.send(remoteGuards);
+          }
+          sender.send('CLOSE');
+        } else {
+          for (var guard in guards) {
+            final segments = guard.segments;
+            for (var segment in segments) {
+              final fields = segment.fields;
+              for (var field in fields) {
+                if (field.type == 'password') {
+                  field.value = encryption
+                      .encrypt(
+                        field.value,
+                        iv: iv,
+                      )
+                      .base64;
+                }
+              }
+            }
+          }
+          final json = guards.map((guard) {
+            var map = guard.toJson();
+            map['created_at'] = guard.createdAt.millisecondsSinceEpoch;
+            map['updated_at'] = guard.updatedAt.millisecondsSinceEpoch;
+            return map;
+          }).toList();
+          final content = codec.encode(json);
+          final localVersion = setting.updatedAt.millisecondsSinceEpoch;
+          await client.writeFile(content, localVersion);
+          sender.send('CLOSE');
         }
-        // json.map((element) {
-        //   print(element);
-        //   final encryped = element['password'];
-        //   final decrypted = encrypter.decrypt(
-        //     Encrypted.fromBase64(element['password']),
-        //     iv: iv,
-        //   );
-        //   print(key.toString());
-        //   print(encryped.toString());
-        //   print(decrypted);
-        //   element['password'] = encrypter.decrypt(
-        //     Encrypted.fromBase64(element['password']),
-        //     iv: iv,
-        //   );
-        // });
-        (args['port'] as SendPort).send(codec.encode(guards));
-        (args['port'] as SendPort).send('SYNC_SUCCEED');
-      } else {
-        final string = args['guards'] as String;
-        List json = codec.decode(string);
-        List<Password> guards = [];
-        for (var element in json) {
-          guards.add(Password(
-            comment: element['comment'],
-            id: element['id'],
-            name: element['name'],
-            username: element['username'],
-            password: encrypter
-                .encrypt(
-                  element['password'],
-                  iv: iv,
-                )
-                .base64,
-          ));
-        }
-        // json.map((element) {
-        //   element['password'] = encrypter
-        //       .encrypt(
-        //         element['password'],
-        //         iv: iv,
-        //       )
-        //       .base64;
-        // });
-        final text = codec.encode(guards);
-        await util.writeFile(text, localVersion);
-        (args['port'] as SendPort).send('SYNC_SUCCEED');
+      } catch (error) {
+        sender.send(error.toString());
       }
-    } catch (e) {
-      String message;
-      if (e.runtimeType == DioException) {
-        message = (e as DioException).message ?? '未知错误';
-      } else {
-        message = e.toString();
-      }
-      (args['port'] as SendPort).send('SYNC_ERROR:$message');
-      (args['port'] as SendPort).send('SYNC_FAILED');
-    }
+    });
   }
 }

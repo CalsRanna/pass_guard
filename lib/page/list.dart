@@ -77,7 +77,7 @@ class _PasswordListState extends State<PasswordList> {
       body: Consumer(
         builder: (context, ref, child) {
           final guards = ref.watch(guardListNotifierProvider);
-          final a = switch (guards) {
+          final consumer = switch (guards) {
             AsyncData(:final value) => ListView.builder(
                 itemBuilder: (_, index) => _GuardListTile(
                   guard: value[index],
@@ -87,7 +87,7 @@ class _PasswordListState extends State<PasswordList> {
               ),
             _ => const SizedBox(),
           };
-          return a;
+          return consumer;
         },
       ),
       floatingActionButton: floatingActionButton,
@@ -227,7 +227,7 @@ class __GuardListTileState extends State<_GuardListTile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(widget.guard.title, style: bodyMedium),
-                  Text(buildSubtitle(), style: bodySmall)
+                  Text(widget.guard.subtitle, style: bodySmall)
                 ],
               ),
             ),
@@ -235,18 +235,5 @@ class __GuardListTileState extends State<_GuardListTile> {
         ],
       ),
     );
-  }
-
-  String buildSubtitle() {
-    final segments = widget.guard.segments;
-    for (final segment in segments) {
-      final fields = segment.fields;
-      for (final field in fields) {
-        if (field.value.isNotEmpty) {
-          return field.value;
-        }
-      }
-    }
-    return '';
   }
 }
