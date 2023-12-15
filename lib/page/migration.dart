@@ -58,12 +58,13 @@ class _MigrationPageState extends State<MigrationPage> {
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 16),
             Consumer(
               builder: (_, ref, child) => ElevatedButton(
                 onPressed: () => migrate(ref),
                 child: const Text('开始迁移'),
               ),
-            )
+            ),
           ],
         ),
       ),

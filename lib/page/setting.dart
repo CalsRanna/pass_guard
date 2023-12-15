@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:password_generator/page/input.dart';
 import 'package:password_generator/page/webdav.dart';
 import 'package:password_generator/provider/setting.dart';
-import 'package:password_generator/widget/setting_label.dart';
-
-import 'advance.dart';
 
 class Setting extends StatelessWidget {
   const Setting({super.key});
@@ -16,67 +14,54 @@ class Setting extends StatelessWidget {
       appBar: AppBar(
         title: const Text('设置'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SettingLabel(label: '加密'),
-            Card(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  Consumer(
-                    builder: (_, ref, child) => ListTile(
-                      subtitle: const Text('牢记主密码，这是解析加密文件的唯一凭证。'),
-                      title: const Text('主密码'),
-                      trailing: const Icon(Icons.chevron_right_outlined),
-                      onTap: () => handleInput(context, ref, '主密码'),
-                    ),
-                  )
-                ],
-              ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Consumer(
+            builder: (_, ref, child) => ListTile(
+              subtitle: const Text('牢记主密码，这是解析加密文件的唯一凭证。'),
+              title: const Text('主密码'),
+              trailing: const Icon(Icons.chevron_right_outlined),
+              onTap: () => handleInput(context, ref, '主密码'),
             ),
-            const SizedBox(height: 16),
-            Card(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              child: ListTile(
-                title: const Text('WebDAV'),
-                trailing: const Icon(Icons.chevron_right_outlined),
-                onTap: () => showWebDAV(context),
-              ),
+          ),
+          ListTile(
+            title: const Text('WebDAV'),
+            trailing: const Icon(Icons.chevron_right_outlined),
+            onTap: () => showWebDAV(context),
+          ),
+          ListTile(
+            title: const Text('开源软件声明'),
+            trailing: const Icon(Icons.chevron_right_outlined),
+            onTap: () => showLicense(context),
+          ),
+          const Spacer(),
+          Align(
+            child: Text(
+              'Guard your password only in your own way.',
+              style: TextStyle(color: Colors.grey.withOpacity(0.75)),
             ),
-            const SizedBox(height: 16),
-            Card(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              child: ListTile(
-                title: const Text('高级'),
-                trailing: const Icon(Icons.chevron_right_outlined),
-                onTap: () => showAdvance(context),
-              ),
+          ),
+          Align(
+            child: Text(
+              'Pass Guard Version 1.0.0',
+              style: TextStyle(color: Colors.grey.withOpacity(0.75)),
             ),
-            const Expanded(child: SizedBox()),
-            Align(
-              child: Text(
-                'Guard your password only in your own way.',
-                style: TextStyle(color: Colors.grey.withOpacity(0.75)),
-              ),
-            ),
-            Align(
-              child: Text(
-                'Pass Guard Version 1.0.0',
-                style: TextStyle(color: Colors.grey.withOpacity(0.75)),
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom)
-          ],
-        ),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom)
+        ],
+      ),
+    );
+  }
+
+  void showLicense(BuildContext context) {
+    PackageInfo.fromPlatform().then(
+      (info) => showLicensePage(
+        applicationIcon: const Icon(Icons.lock_outline, size: 64),
+        applicationLegalese: 'Guard your password only in your own way.',
+        applicationName: info.appName,
+        applicationVersion: info.version,
+        context: context,
       ),
     );
   }
@@ -101,12 +86,6 @@ class Setting extends StatelessWidget {
   void showWebDAV(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const WebDAV()),
-    );
-  }
-
-  void showAdvance(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const Advance()),
     );
   }
 }

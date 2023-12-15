@@ -22,109 +22,94 @@ class _WebDAVState extends State<WebDAV> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('WebDAV')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Consumer(builder: (_, ref, child) {
-          final provider = ref.watch(settingNotifierProvider);
-          final setting = switch (provider) {
-            AsyncData(:final value) => value,
-            _ => null,
-          };
-          final remoteVersionProvider = ref.watch(getRemoteVersionProvider);
-          final version = switch (remoteVersionProvider) {
-            AsyncData(:final value) => value,
-            _ => null,
-          };
+      body: Consumer(builder: (_, ref, child) {
+        final provider = ref.watch(settingNotifierProvider);
+        final setting = switch (provider) {
+          AsyncData(:final value) => value,
+          _ => null,
+        };
+        final remoteVersionProvider = ref.watch(getRemoteVersionProvider);
+        final version = switch (remoteVersionProvider) {
+          AsyncData(:final value) => value,
+          _ => null,
+        };
 
-          return ListView(
-            children: [
-              const SettingLabel(label: '配置'),
-              Card(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                elevation: 0,
-                margin: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    ListTile(
-                      subtitle: Text(setting?.webDavUrl ?? ''),
-                      title: const Text('服务器地址'),
-                      trailing: const Icon(Icons.chevron_right_outlined),
-                      onTap: () => handleInput(
-                        ref,
-                        '服务器地址',
-                        setting?.webDavUrl,
-                      ),
-                    ),
-                    ListTile(
-                      subtitle: Text(setting?.webDavUsername ?? ''),
-                      title: const Text('用户名'),
-                      trailing: const Icon(Icons.chevron_right_outlined),
-                      onTap: () => handleInput(
-                        ref,
-                        '用户名',
-                        setting?.webDavUsername,
-                      ),
-                    ),
-                    ListTile(
-                      subtitle: Text(setting?.webDavPassword ?? ''),
-                      title: const Text('密码'),
-                      trailing: const Icon(Icons.chevron_right_outlined),
-                      onTap: () => handleInput(
-                        ref,
-                        '密码',
-                        setting?.webDavPassword,
-                      ),
-                    ),
-                  ],
-                ),
+        return ListView(
+          children: [
+            const SettingLabel(label: '配置'),
+            ListTile(
+              subtitle: Text(setting?.webDavUrl ?? ''),
+              title: const Text('服务器地址'),
+              trailing: const Icon(Icons.chevron_right_outlined),
+              onTap: () => handleInput(
+                ref,
+                '服务器地址',
+                setting?.webDavUrl,
               ),
-              const SizedBox(height: 16),
-              Card(
-                color: Theme.of(context).colorScheme.surfaceVariant,
-                elevation: 0,
-                margin: EdgeInsets.zero,
-                child: Consumer(builder: (_, ref, child) {
-                  final setting = ref.watch(settingNotifierProvider);
-                  final strategy = switch (setting) {
-                    AsyncData(:final value) => value.syncStrategy,
-                    _ => 0,
-                  };
-                  return ListTile(
-                    subtitle: Text(strategies[strategy]),
-                    title: const Text('同步策略'),
-                    trailing: const Icon(Icons.chevron_right_outlined),
-                    onTap: handleSelect,
-                  );
-                }),
+            ),
+            ListTile(
+              subtitle: Text(setting?.webDavUsername ?? ''),
+              title: const Text('用户名'),
+              trailing: const Icon(Icons.chevron_right_outlined),
+              onTap: () => handleInput(
+                ref,
+                '用户名',
+                setting?.webDavUsername,
               ),
-              const SettingLabel(
-                label: '当同步策略是自动校验时，将自动选择用版本高的一方覆盖版本低的一方。',
+            ),
+            ListTile(
+              subtitle: Text(setting?.webDavPassword ?? ''),
+              title: const Text('密码'),
+              trailing: const Icon(Icons.chevron_right_outlined),
+              onTap: () => handleInput(
+                ref,
+                '密码',
+                setting?.webDavPassword,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
+            ),
+            Consumer(builder: (_, ref, child) {
+              final setting = ref.watch(settingNotifierProvider);
+              final strategy = switch (setting) {
+                AsyncData(:final value) => value.syncStrategy,
+                _ => 0,
+              };
+              return ListTile(
+                subtitle: Text(strategies[strategy]),
+                title: const Text('同步策略'),
+                trailing: const Icon(Icons.chevron_right_outlined),
+                onTap: handleSelect,
+              );
+            }),
+            const SettingLabel(
+              label: '当同步策略是自动校验时，将自动选择用版本高的一方覆盖版本低的一方。',
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton(
                 onPressed: () => syncVault(ref),
                 child: Align(child: Text(syncing ? '同步中' : '同步')),
               ),
-              const SettingLabel(
-                label: '当密码通过WebDAV同步时，将对你的密码进行加密处理，以保障安全。',
+            ),
+            const SettingLabel(
+              label: '当密码通过WebDAV同步时，将对你的密码进行加密处理，以保障安全。',
+            ),
+            const SizedBox(height: 16),
+            Align(
+              child: Text(
+                '本地版本：${setting?.updatedAt.millisecondsSinceEpoch}',
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              const SizedBox(height: 16),
-              Align(
-                child: Text(
-                  '本地版本：${setting?.updatedAt.millisecondsSinceEpoch}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+            ),
+            Align(
+              child: Text(
+                '云端版本：${version ?? 0}',
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              Align(
-                child: Text(
-                  '云端版本：${version ?? 0}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ],
-          );
-        }),
-      ),
+            ),
+          ],
+        );
+      }),
     );
   }
 
