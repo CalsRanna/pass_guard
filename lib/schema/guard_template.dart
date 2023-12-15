@@ -54,8 +54,12 @@ class GuardTemplate {
     template.segments = (json['segments'] as List)
         .map((segment) => Segment.fromJson(segment))
         .toList();
-    template.createdAt = json['created_at'] ?? DateTime.now();
-    template.updatedAt = json['updated_at'] ?? DateTime.now();
+    template.createdAt = json['created_at'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json['created_at'])
+        : DateTime.now();
+    template.updatedAt = json['updated_at'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json['updated_at'])
+        : DateTime.now();
     return template;
   }
 
@@ -72,8 +76,8 @@ class GuardTemplate {
       'id': id,
       'name': name,
       'segments': segments.map((segment) => segment.toJson()).toList(),
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
 }

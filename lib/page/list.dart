@@ -78,9 +78,40 @@ class _PasswordListState extends State<PasswordList> {
         builder: (context, ref, child) {
           final guards = ref.watch(guardListNotifierProvider);
           final consumer = switch (guards) {
-            AsyncData(:final value) => ListView.builder(
-                itemBuilder: (_, index) => _GuardListTile(
-                  guard: value[index],
+            AsyncData(:final value) => ListView.separated(
+                // itemBuilder: (_, index) => _GuardListTile(
+                //   guard: value[index],
+                //   onTap: () => showDetail(value[index].id),
+                // ),
+                separatorBuilder: (context, index) => Divider(
+                  thickness: 1,
+                  height: 1,
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                ),
+                itemBuilder: (context, index) => ListTile(
+                  title: Text(
+                    value[index].title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    value[index].subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  leading: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.cyan,
+                      shape: BoxShape.circle,
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.all(4),
+                    child: const Icon(
+                      Icons.public_outlined,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
                   onTap: () => showDetail(value[index].id),
                 ),
                 itemCount: value.length,
