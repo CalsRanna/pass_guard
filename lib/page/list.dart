@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
-import 'package:password_generator/page/form/form.dart';
 import 'package:password_generator/page/setting.dart';
 import 'package:password_generator/provider/guard.dart';
 import 'package:password_generator/router/router.dart';
@@ -9,11 +8,13 @@ import 'package:password_generator/schema/guard.dart';
 import 'package:password_generator/schema/isar.dart';
 import 'package:password_generator/schema/migration.dart';
 
-/// A StatefulWidget that renders a list of passwords.
+/// `PasswordList` is a StatefulWidget that is responsible for displaying a list of passwords.
 ///
-/// This screen is used to display and manage a list of passwords for the user.
-/// It allows for operations such as viewing, editing, and deleting passwords.
+/// It uses the `_PasswordListState` to manage its state.
 class PasswordList extends StatefulWidget {
+  /// Creates a [PasswordList] instance.
+  ///
+  /// This constructor initializes a new instance of [PasswordList] widget.
   const PasswordList({super.key});
 
   @override
@@ -22,8 +23,23 @@ class PasswordList extends StatefulWidget {
   }
 }
 
+/// `_PasswordListState` is a private class that extends `State<PasswordList>`.
+///
+/// It is responsible for managing the state of the `PasswordList` widget.
+/// It contains a `FocusNode` and a boolean `showTextField` to manage the input focus and the visibility of a TextField widget respectively.
 class _PasswordListState extends State<PasswordList> {
+  /// Represents a single interaction with the user interface.
+  ///
+  /// It keeps track of whether this part of the user interface
+  /// currently has the keyboard focus.
+  ///
+  /// It is used in [_PasswordListState] to manage the input focus.
   FocusNode focusNode = FocusNode();
+
+  /// Indicates whether the TextField widget is visible or not.
+  ///
+  /// When set to `true`, the TextField widget is visible and when set to `false`, it is hidden.
+  /// This property is used to control the visibility of the TextField widget in the UI.
   bool showTextField = false;
 
   @override
@@ -32,12 +48,12 @@ class _PasswordListState extends State<PasswordList> {
       Consumer(
         builder: (_, ref, child) => IconButton(
           icon: const Icon(Icons.search_outlined),
-          onPressed: () => triggerTextField(ref),
+          onPressed: () => toggleTextField(ref),
         ),
       ),
       IconButton(
         icon: const Icon(Icons.settings_outlined),
-        onPressed: () => handleNavigated(context, 'setting'),
+        onPressed: showSetting,
       ),
     ];
 
@@ -46,7 +62,7 @@ class _PasswordListState extends State<PasswordList> {
       actions = [
         Consumer(
           builder: (_, ref, child) => IconButton(
-            onPressed: () => triggerTextField(ref),
+            onPressed: () => toggleTextField(ref),
             icon: const Icon(Icons.close),
           ),
         )
@@ -79,42 +95,15 @@ class _PasswordListState extends State<PasswordList> {
           final guards = ref.watch(guardListNotifierProvider);
           final consumer = switch (guards) {
             AsyncData(:final value) => ListView.separated(
-                // itemBuilder: (_, index) => _GuardListTile(
-                //   guard: value[index],
-                //   onTap: () => showDetail(value[index].id),
-                // ),
-                separatorBuilder: (context, index) => Divider(
-                  thickness: 1,
-                  height: 1,
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                ),
-                itemBuilder: (context, index) => ListTile(
-                  title: Text(
-                    value[index].title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    value[index].subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  leading: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.cyan,
-                      shape: BoxShape.circle,
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.public_outlined,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
+                itemBuilder: (_, index) => _GuardListTile(
+                  guard: value[index],
                   onTap: () => showDetail(value[index].id),
                 ),
                 itemCount: value.length,
+                separatorBuilder: (context, index) => Divider(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  height: 1,
+                ),
               ),
             _ => const SizedBox(),
           };
@@ -139,6 +128,10 @@ class _PasswordListState extends State<PasswordList> {
     return count > 0;
   }
 
+  /// Initiates the process of creating a new password.
+  ///
+  /// This method navigates to the CreateGuardRoute, where the user can
+  /// generate a new password. The new password is then stored and can be used later.
   void createPassword() {
     const CreateGuardRoute().push(context);
   }
@@ -156,21 +149,6 @@ class _PasswordListState extends State<PasswordList> {
   void filterGuards(WidgetRef ref, String value) {
     final notifier = ref.read(guardListNotifierProvider.notifier);
     notifier.filterGuards(value);
-  }
-
-  void handleNavigated(BuildContext context, String route) {
-    if (route == 'create') {
-      const CreateGuardRoute().push(context);
-    } else {
-      final router = Navigator.of(context);
-      Widget page;
-      if (route == 'create') {
-        page = const PasswordForm();
-      } else {
-        page = const Setting();
-      }
-      router.push(MaterialPageRoute(builder: (context) => page));
-    }
   }
 
   @override
@@ -195,7 +173,28 @@ class _PasswordListState extends State<PasswordList> {
     GuardDetailRoute(id).push(context);
   }
 
-  void triggerTextField(WidgetRef ref) {
+  /// Navigates to the settings page when invoked.
+  ///
+  /// This method is responsible for pushing the Settings page onto the navigation
+  /// stack using a MaterialPageRoute. The Settings page is built using the [Setting] widget.
+  void showSetting() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const Setting()),
+    );
+  }
+
+  /// Toggles the visibility of the TextField widget when invoked.
+  ///
+  /// This method is responsible for switching the visibility of the TextField widget.
+  /// If the TextField widget is not visible, this method will request focus for the
+  /// TextField widget and set [showTextField] to `true` making it visible.
+  /// If the TextField widget is already visible, this method will set [showTextField]
+  /// to `false` hiding the TextField widget and trigger the filterGuards method on the
+  /// [guardListNotifierProvider] with an empty string to reset the filter.
+  ///
+  /// [ref] is the WidgetRef from the Riverpod context which is used to read the
+  /// [guardListNotifierProvider].
+  void toggleTextField(WidgetRef ref) {
     if (!showTextField) {
       focusNode.requestFocus();
       setState(() {
@@ -211,60 +210,68 @@ class _PasswordListState extends State<PasswordList> {
   }
 }
 
-class _GuardListTile extends StatefulWidget {
+/// A StatelessWidget that represents a ListTile for a Guard.
+///
+/// This widget takes a [Guard] object and an optional onTap function as input
+/// and builds a ListTile widget. The ListTile displays the title and subtitle
+/// of the guard and has an icon leading the text.
+///
+/// The ListTile also handles onTap events. If a function is provided to the
+/// [onTap] parameter, it is called when the ListTile is tapped.
+/// If no function is provided, onTap events are ignored.
+///
+/// The [Guard] object must be provided, but the onTap function is optional.
+class _GuardListTile extends StatelessWidget {
+  /// Represents a [Guard] object associated with this widget.
+  ///
+  /// The [Guard] object contains various properties that define the characteristics
+  /// of the guard in the context of this list tile. These properties can include
+  /// things like the guard's title, subtitle, and whether it is currently active.
   final Guard guard;
 
+  /// A callback that is called when the [_GuardListTile] widget is tapped.
+  ///
+  /// This function will be invoked when the user taps on the [_GuardListTile] widget.
+  /// It can be used to execute any additional logic when the widget is activated by the user.
+  ///
+  /// This function is optional, if it's not provided, onTap events are ignored.
   final void Function()? onTap;
+
+  /// Constructs a [_GuardListTile] instance.
+  ///
+  /// Takes a [Guard] object and an optional onTap function as parameters.
+  /// - [guard] - Represents a [Guard] object associated with this widget.
+  /// - [onTap] - A callback function that is invoked when the [_GuardListTile] widget is tapped.
+  ///   If it's not provided, onTap events are ignored.
   const _GuardListTile({required this.guard, this.onTap});
 
   @override
-  State<StatefulWidget> createState() => __GuardListTileState();
-}
-
-class __GuardListTileState extends State<_GuardListTile> {
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final surfaceVariant = colorScheme.surfaceVariant;
-    final borderSide = BorderSide(color: surfaceVariant);
-    final textTheme = theme.textTheme;
-    final bodyMedium = textTheme.bodyMedium;
-    final bodySmall = textTheme.bodySmall;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.cyan,
-              shape: BoxShape.circle,
-            ),
-            margin: const EdgeInsets.all(8),
-            padding: const EdgeInsets.all(4),
-            child: const Icon(
-              Icons.public_outlined,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(border: Border(bottom: borderSide)),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.guard.title, style: bodyMedium),
-                  Text(widget.guard.subtitle, style: bodySmall)
-                ],
-              ),
-            ),
-          )
-        ],
+    return ListTile(
+      title: Text(
+        guard.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
+      subtitle: Text(
+        guard.subtitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      leading: Container(
+        decoration: const BoxDecoration(
+          color: Colors.cyan,
+          shape: BoxShape.circle,
+        ),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(4),
+        child: const Icon(
+          Icons.public_outlined,
+          color: Colors.white,
+          size: 32,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 }
