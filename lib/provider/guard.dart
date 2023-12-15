@@ -87,6 +87,8 @@ class GuardListNotifier extends _$GuardListNotifier {
     });
     ref.invalidateSelf();
     await future;
+    final notifier = ref.read(settingNotifierProvider.notifier);
+    notifier.updateUpdatedAt(guard.updatedAt);
   }
 
   Future<void> uploadGuards() async {
@@ -103,10 +105,12 @@ class GuardListNotifier extends _$GuardListNotifier {
 
   Future<void> downloadGuards() async {
     var setting = await ref.read(settingNotifierProvider.future);
+    final version = await ref.read(getRemoteVersionProvider.future);
     final guards = await Synchronization.sync(
       setting: setting,
       guards: [],
       direction: 'download',
+      remoteVersion: version,
     );
     if (guards == null) return;
     state = AsyncData(guards);
@@ -114,7 +118,6 @@ class GuardListNotifier extends _$GuardListNotifier {
       await isar.guards.clear();
       await isar.guards.putAll(guards);
     });
-    final version = await ref.read(getRemoteVersionProvider.future);
     setting.updatedAt = DateTime.fromMillisecondsSinceEpoch(version ?? 0);
     await isar.writeTxn(() async {
       await isar.settings.put(setting);

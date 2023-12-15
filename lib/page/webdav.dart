@@ -197,12 +197,12 @@ class _WebDAVState extends State<WebDAV> {
             ListTile(
               leading: const Icon(Icons.cloud_upload_outlined),
               title: const Text('上传'),
-              onTap: () => confirmSync(ref, direction: 'upload'),
+              onTap: () => confirmManualSync(ref, 'upload'),
             ),
             ListTile(
               leading: const Icon(Icons.cloud_download_outlined),
               title: const Text('下载'),
-              onTap: () => confirmSync(ref, direction: 'download'),
+              onTap: () => confirmManualSync(ref, 'download'),
             ),
           ],
         ),
@@ -210,11 +210,15 @@ class _WebDAVState extends State<WebDAV> {
     );
   }
 
+  void confirmManualSync(WidgetRef ref, String direction) {
+    Navigator.of(context).pop();
+    confirmSync(ref, direction: direction);
+  }
+
   Future<void> confirmSync(WidgetRef ref, {String? direction}) async {
     setState(() {
       syncing = true;
     });
-    print(syncing);
     final messenger = Message.of(context);
     try {
       final setting = await ref.read(settingNotifierProvider.future);
@@ -226,22 +230,20 @@ class _WebDAVState extends State<WebDAV> {
       final conditionD = direction == 'download';
       final notifier = ref.read(guardListNotifierProvider.notifier);
       if (conditionA && conditionB || conditionC && conditionD) {
-        print('download');
         await notifier.downloadGuards();
         messenger.show('下载完毕');
       } else {
-        print('upload');
         await notifier.uploadGuards();
         messenger.show('上传完毕');
       }
       setState(() {
         syncing = false;
       });
-      print(syncing);
     } catch (e) {
       setState(() {
         syncing = false;
       });
+      messenger.show(e.toString());
     }
   }
 }

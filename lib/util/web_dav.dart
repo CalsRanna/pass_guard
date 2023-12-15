@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -19,18 +20,18 @@ class WebDAVUtil {
     required this.url,
     required this.username,
   }) {
-    // final dio = WdDio();
-    // dio.httpClientAdapter = IOHttpClientAdapter(
-    //   validateCertificate: (certificate, host, port) {
-    //     return true;
-    //   },
-    // );
-    // _client = Client(
-    //   uri: url,
-    //   c: dio,
-    //   auth: BasicAuth(user: username, pwd: password),
-    // );
-    _client = newClient(url, user: username, password: password);
+    final dio = WdDio();
+    // Skip https certificate validation
+    dio.httpClientAdapter = IOHttpClientAdapter(
+      validateCertificate: (certificate, host, port) {
+        return true;
+      },
+    );
+    // Fix cannot be used to imply a default content-type
+    dio.options = BaseOptions(contentType: 'application/octet-stream');
+    final auth = BasicAuth(user: username, pwd: password);
+    _client = Client(uri: url, c: dio, auth: auth);
+    // _client = newClient(url, user: username, password: password);
     _path = p.join(path, '.pass_guard', '.vault');
   }
 
@@ -57,26 +58,18 @@ class WebDAVUtil {
 
   Future<void> writeFile(String text, int version) async {
     await _init();
-    // 解决中文字符串的codeUnit转码后乱码的问题
-    // 先将原本的字符串转换为codeUnits, 再将codeUnits数字直接转换
-    // 为[91, 57, 49,<...>]格式的字符串，再将该字符串转换为codeUnits
-    await _client.write(
-      p.join(_path, '$version'),
-      Uint8List.fromList(text.codeUnits.toString().codeUnits),
-    );
+    final path = p.join(_path, '$version');
+    final bytes = utf8.encode(text);
+    final encodedText = base64.encode(bytes);
+    final encodedBytes = encodedText.codeUnits;
+    await _client.write(path, Uint8List.fromList(encodedBytes));
   }
 
   Future<String> readFile(int version) async {
     await _init();
-    final bytes = await _client.read(p.join(_path, '$version'));
-    print(bytes);
-    final string = String.fromCharCodes(bytes);
-    final patterns = string
-        .replaceAll('[', '')
-        .replaceAll(']', '')
-        .replaceAll(' ', '')
-        .split(',');
-    final codeUnits = patterns.map((pattern) => int.parse(pattern)).toList();
-    return String.fromCharCodes(codeUnits);
+    final encodedBytes = await _client.read(p.join(_path, '$version'));
+    final encodedText = String.fromCharCodes(encodedBytes);
+    final bytes = base64.decode(encodedText);
+    return utf8.decode(bytes);
   }
 }

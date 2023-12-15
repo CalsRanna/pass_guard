@@ -109,12 +109,19 @@ class Guard {
   ///   A new `Guard` instance with the properties set from the JSON map.
   factory Guard.fromJson(Map<String, dynamic> json) {
     final guard = Guard();
+    if (json['id'] != null) {
+      guard.id = json['id'];
+    }
     guard.title = json['title'] ?? '';
     guard.segments = (json['segments'] as List)
         .map((segment) => Segment.fromJson(segment))
         .toList();
-    guard.createdAt = json['created_at'] ?? DateTime.now();
-    guard.updatedAt = json['updated_at'] ?? DateTime.now();
+    guard.createdAt = json['created_at'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json['created_at'])
+        : DateTime.now();
+    guard.updatedAt = json['updated_at'] != null
+        ? DateTime.fromMillisecondsSinceEpoch(json['updated_at'])
+        : DateTime.now();
     return guard;
   }
 
@@ -155,8 +162,8 @@ class Guard {
       'id': id,
       'title': title,
       'segments': segments.map((segment) => segment.toJson()).toList(),
-      'created_at': createdAt,
-      'updated_at': updatedAt,
+      'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': updatedAt.millisecondsSinceEpoch,
     };
   }
 }
