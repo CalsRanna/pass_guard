@@ -212,8 +212,9 @@ class _PasswordFormState extends State<PasswordForm> {
     final password = await const PasswordGeneratorPageRoute(
       plain: false,
     ).push(context);
+    if (password == null) return;
     setState(() {
-      field.value = password ?? '';
+      field.value = password;
     });
   }
 
