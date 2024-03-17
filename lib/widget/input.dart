@@ -150,7 +150,7 @@ class _InputState extends State<Input> {
   @override
   void didUpdateWidget(covariant Input oldWidget) {
     super.didUpdateWidget(oldWidget);
-    controller.text = widget.initialValue ?? '';
+    // controller.text = widget.initialValue ?? '';
   }
 
   @override
