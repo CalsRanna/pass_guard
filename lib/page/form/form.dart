@@ -87,6 +87,8 @@ class _PasswordFormState extends State<PasswordForm> {
   /// When set to `false`, the password generator will be hidden.
   bool showGenerator = false;
 
+  TextEditingController controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,6 +136,8 @@ class _PasswordFormState extends State<PasswordForm> {
                       FormItem(
                         label: field.label,
                         child: Input(
+                          controller:
+                              field.type == 'password' ? controller : null,
                           initialValue: field.value,
                           type: field.type == 'password'
                               ? InputType.password
@@ -167,6 +171,12 @@ class _PasswordFormState extends State<PasswordForm> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   /// Retrieves the [Guard] object with the given id from the database.
@@ -216,6 +226,7 @@ class _PasswordFormState extends State<PasswordForm> {
     setState(() {
       field.value = password;
     });
+    controller.text = password;
   }
 
   /// Inserts a new field into the specified [segment].

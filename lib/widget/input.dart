@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 ///
 /// The `Input` widget is used to receive user input in form fields throughout the application.
 class Input extends StatefulWidget {
+  final TextEditingController? controller;
+
   /// The initial value of the input field.
   ///
   /// This value is used to pre-fill the input field when it is first displayed. If
@@ -46,6 +48,7 @@ class Input extends StatefulWidget {
   /// [onChanged] is a callback that is invoked when the user changes the input in the field.
   const Input({
     super.key,
+    this.controller,
     this.initialValue,
     this.placeholder,
     this.type = InputType.text,
@@ -70,7 +73,7 @@ class _InputState extends State<Input> {
   /// It provides the ability to read and write the current text in the [Input] field,
   /// and to listen for changes to the text value. It is used to control the text
   /// being edited and to handle user interactions with the [Input] field.
-  TextEditingController controller = TextEditingController();
+  late TextEditingController controller;
 
   /// Determines whether the text in the input field is obscured.
   ///
@@ -148,14 +151,10 @@ class _InputState extends State<Input> {
   }
 
   @override
-  void didUpdateWidget(covariant Input oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // controller.text = widget.initialValue ?? '';
-  }
-
-  @override
   void dispose() {
-    controller.dispose();
+    if (widget.controller == null) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -175,6 +174,11 @@ class _InputState extends State<Input> {
   @override
   void initState() {
     super.initState();
+    if (widget.controller != null) {
+      controller = widget.controller!;
+    } else {
+      controller = TextEditingController();
+    }
     controller.text = widget.initialValue ?? '';
     updatePlaceholder(widget.initialValue);
   }
